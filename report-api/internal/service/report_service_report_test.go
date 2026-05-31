@@ -57,7 +57,7 @@ func (m mockReportRepoForReports) GetSummary(ctx context.Context, orgUnitIDs []s
 func TestGetPersonalReport_Success(t *testing.T) {
 	orgRepo := mockOrgRepoForReports{}
 
-	now := time.Now()
+	now, _ := time.Parse("2006-01-02", "2026-05-30")
 	inoutRepo := mockInOutRepoForReports{
 		getPersonalEventsFn: func(ctx context.Context, employeeID, startDate, endDate string) ([]model.InOutEvent, error) {
 			return []model.InOutEvent{

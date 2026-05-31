@@ -71,6 +71,9 @@ func (w *Worker) Run(ctx context.Context) error {
 			log.Printf("org lookup failed eventId=%s: %v", event.EventID, err)
 		}
 		orgLookupCancel()
+		if err == nil && orgUnitID == "" {
+			orgUnitID = "a0000000-0000-0000-0000-000000000001" // Fallback to root TSMC Corp for unregistered/simulated users
+		}
 		log.Printf("org lookup for employee %s returned orgUnitID %s", event.EmployeeID, orgUnitID)
 
 		insertCtx, cancel := context.WithTimeout(ctx, 5*time.Second)

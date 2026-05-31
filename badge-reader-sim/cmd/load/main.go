@@ -68,7 +68,7 @@ func main() {
 	}
 	client := &http.Client{Timeout: 15 * time.Second, Transport: transport}
 
-	var okCount, failCount, allowCount, denyCount uint64
+	var okCount, failCount, allowCount, denyCount, sentCount uint64
 	latencies := make([]int64, 0, *count)
 	var latMu sync.Mutex
 
@@ -94,14 +94,38 @@ func main() {
 					Timestamp: time.Now().UTC().Format(time.RFC3339),
 				})
 				t0 := time.Now()
-				resp, err := client.Post(url, "application/json", bytes.NewReader(body))
+				req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+				var resp *http.Response
+				if err == nil {
+					req.Header.Set("Content-Type", "application/json")
+					apiKey := os.Getenv("API_KEY")
+					if apiKey == "" {
+						apiKey = "dev-api-key-2026"
+					}
+					req.Header.Set("X-API-Key", apiKey)
+					resp, err = client.Do(req)
+				}
 				ms := time.Since(t0).Milliseconds()
 				latMu.Lock()
 				latencies = append(latencies, ms)
 				latMu.Unlock()
 
-				if err != nil || resp == nil {
-					atomic.AddUint64(&failCount, 1)
+				currSent := atomic.AddUint64(&sentCount, 1)
+				if currSent % 5000 == 0 {
+					fmt.Printf("[%s] Progress: Sent %d / %d requests (%.1f%%)...\n",
+						time.Now().Format("15:04:05"), currSent, *count, float64(currSent)/float64(*count)*100)
+				}
+
+				if err != nil {
+					if atomic.AddUint64(&failCount, 1) <= 20 {
+						fmt.Printf("Request error: %v\n", err)
+					}
+					continue
+				}
+				if resp == nil {
+					if atomic.AddUint64(&failCount, 1) <= 20 {
+						fmt.Printf("Response is nil\n")
+					}
 					continue
 				}
 				data, _ := io.ReadAll(resp.Body)
@@ -117,7 +141,9 @@ func main() {
 						}
 					}
 				} else {
-					atomic.AddUint64(&failCount, 1)
+					if atomic.AddUint64(&failCount, 1) <= 20 {
+						fmt.Printf("HTTP status error: %d, body: %s\n", resp.StatusCode, string(data))
+					}
 				}
 			}
 		}()

@@ -65,7 +65,20 @@ data:
   access-control.json: |
     {
       "annotations": {
-        "list": []
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
       },
       "editable": true,
       "fiscalYearStartMonth": 0,
@@ -74,46 +87,64 @@ data:
       "liveNow": false,
       "panels": [
         {
-          "id": 1,
-          "type": "text",
-          "title": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "id": 11,
+          "libraryPanel": {
+            "name": "即時熱點圖 — 各門刷卡量（近 1 小時）",
+            "uid": "afnqggqd5xedce"
+          },
+          "title": "即時熱點圖 — 各門刷卡量（近 1 小時）"
+        },
+        {
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "id": 13,
+          "libraryPanel": {
+            "name": "反潛回異常（近 1 分鐘最高門禁次數）",
+            "uid": "efnqgh07z06iob"
+          },
+          "title": "反潛回異常（近 1 分鐘最高門禁次數）"
+        },
+        {
           "gridPos": {
             "h": 3,
             "w": 24,
             "x": 0,
-            "y": 0
+            "y": 8
           },
+          "id": 1,
           "options": {
-            "mode": "markdown",
-            "content": "## Shift Change Monitor\n\n監控換班尖峰刷卡流量。產生流量：`make load-shift-change` (90k 不同人 IN)\n\n| 服務 | URL |\n|------|-----|\n| Grafana | http://localhost:3001 (admin/admin) |\n| Prometheus | http://localhost:9090 |\n| Access API metrics | http://localhost:8080/metrics |\n"
-          }
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "## Shift Change Monitor\n\n監控換班尖峰刷卡流量。產生流量：`make load-shift-change` (90k 不同人 IN)\n\n| 服務 | URL |\n|------|-----|\n| Grafana | http://localhost:3001 (admin/admin) |\n| Prometheus | http://localhost:9090 |\n| Access API metrics | http://localhost:8080/metrics |\n",
+            "mode": "markdown"
+          },
+          "pluginVersion": "11.0.0",
+          "type": "text"
         },
         {
-          "id": 2,
-          "type": "stat",
-          "title": "刷卡 QPS",
-          "gridPos": {
-            "h": 4,
-            "w": 8,
-            "x": 0,
-            "y": 3
-          },
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "targets": [
-            {
-              "expr": "access_api_qps",
-              "refId": "A"
-            }
-          ],
           "fieldConfig": {
             "defaults": {
-              "unit": "reqps",
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -130,11 +161,23 @@ data:
                     "value": 1000
                   }
                 ]
-              }
+              },
+              "unit": "reqps"
             },
             "overrides": []
           },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 11
+          },
+          "id": 2,
           "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -142,38 +185,31 @@ data:
               "fields": "",
               "values": false
             },
-            "orientation": "auto",
+            "showPercentChange": false,
             "textMode": "auto",
-            "colorMode": "value",
-            "graphMode": "area"
-          }
+            "wideLayout": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "expr": "access_api_qps",
+              "refId": "A"
+            }
+          ],
+          "title": "刷卡 QPS",
+          "type": "stat"
         },
         {
-          "id": 3,
-          "type": "stat",
-          "title": "p99 延遲 (ms)",
-          "gridPos": {
-            "h": 4,
-            "w": 8,
-            "x": 8,
-            "y": 3
-          },
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "targets": [
-            {
-              "expr": "access_api_p99_latency_ms",
-              "refId": "A"
-            }
-          ],
           "fieldConfig": {
             "defaults": {
-              "unit": "ms",
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -190,11 +226,23 @@ data:
                     "value": 50
                   }
                 ]
-              }
+              },
+              "unit": "ms"
             },
             "overrides": []
           },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 11
+          },
+          "id": 3,
           "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -202,42 +250,493 @@ data:
               "fields": "",
               "values": false
             },
-            "orientation": "auto",
+            "showPercentChange": false,
             "textMode": "auto",
-            "colorMode": "value",
-            "graphMode": "area"
-          }
+            "wideLayout": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "expr": "access_api_p99_latency_ms",
+              "refId": "A"
+            }
+          ],
+          "title": "p99 延遲 (ms)",
+          "type": "stat"
         },
         {
-          "id": 4,
-          "type": "stat",
-          "title": "ALLOW 比例 (%)",
-          "gridPos": {
-            "h": 4,
-            "w": 8,
-            "x": 16,
-            "y": 3
-          },
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 11
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.0.0",
           "targets": [
             {
               "expr": "sum(rate(access_api_swipe_total{decision=\"ALLOW\"}[5m])) / sum(rate(access_api_swipe_total[5m])) * 100",
               "refId": "A"
             }
           ],
+          "title": "ALLOW 比例 (%)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "fieldConfig": {
             "defaults": {
-              "unit": "percent",
               "color": {
-                "mode": "thresholds"
-              }
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "reqps"
             },
             "overrides": []
           },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 15
+          },
+          "id": 5,
           "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "expr": "access_api_qps",
+              "legendFormat": "QPS",
+              "refId": "A"
+            }
+          ],
+          "title": "QPS 趨勢",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 15
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(access_api_swipe_duration_ms_bucket[5m])) by (le))",
+              "legendFormat": "p50",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(access_api_swipe_duration_ms_bucket[5m])) by (le))",
+              "legendFormat": "p95",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(access_api_swipe_duration_ms_bucket[5m])) by (le))",
+              "legendFormat": "p99",
+              "refId": "C"
+            }
+          ],
+          "title": "p50 / p95 / p99 延遲 (ms)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 23
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(access_api_swipe_total{decision=\"ALLOW\"}[1m]))",
+              "legendFormat": "ALLOW",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(rate(access_api_swipe_total{decision=\"DENY\"}[1m]))",
+              "legendFormat": "DENY",
+              "refId": "B"
+            }
+          ],
+          "title": "ALLOW vs DENY QPS",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 12,
+            "y": 23
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum by (reason) (rate(access_api_swipe_total{decision=\"DENY\"}[5m]))",
+              "legendFormat": "{{reason}}",
+              "refId": "A"
+            }
+          ],
+          "title": "DENY 原因 QPS",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 20,
+            "y": 23
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "pieType": "pie",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -245,227 +744,21 @@ data:
               "fields": "",
               "values": false
             },
-            "orientation": "auto",
-            "textMode": "auto",
-            "colorMode": "value",
-            "graphMode": "area"
-          }
-        },
-        {
-          "id": 5,
-          "type": "timeseries",
-          "title": "QPS 趨勢",
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 7
-          },
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "targets": [
-            {
-              "expr": "access_api_qps",
-              "refId": "A",
-              "legendFormat": "QPS"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "reqps",
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 1,
-                "fillOpacity": 10
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
             "tooltip": {
-              "mode": "multi"
+              "maxHeight": 600,
+              "mode": "single",
+              "sort": "none"
             }
-          }
-        },
-        {
-          "id": 6,
-          "type": "timeseries",
-          "title": "p50 / p95 / p99 延遲 (ms)",
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 7
-          },
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "targets": [
-            {
-              "expr": "histogram_quantile(0.50, sum(rate(access_api_swipe_duration_ms_bucket[5m])) by (le))",
-              "refId": "A",
-              "legendFormat": "p50"
-            },
-            {
-              "expr": "histogram_quantile(0.95, sum(rate(access_api_swipe_duration_ms_bucket[5m])) by (le))",
-              "refId": "B",
-              "legendFormat": "p95"
-            },
-            {
-              "expr": "histogram_quantile(0.99, sum(rate(access_api_swipe_duration_ms_bucket[5m])) by (le))",
-              "refId": "C",
-              "legendFormat": "p99"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms",
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 1,
-                "fillOpacity": 10
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi"
-            }
-          }
-        },
-        {
-          "id": 7,
-          "type": "timeseries",
-          "title": "ALLOW vs DENY QPS",
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 15
-          },
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "targets": [
-            {
-              "expr": "sum(rate(access_api_swipe_total{decision=\"ALLOW\"}[1m]))",
-              "refId": "A",
-              "legendFormat": "ALLOW"
-            },
-            {
-              "expr": "sum(rate(access_api_swipe_total{decision=\"DENY\"}[1m]))",
-              "refId": "B",
-              "legendFormat": "DENY"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "reqps",
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 1,
-                "fillOpacity": 10
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi"
-            }
-          }
-        },
-        {
-          "id": 8,
-          "type": "timeseries",
-          "title": "DENY 原因 QPS",
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 12,
-            "y": 15
-          },
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "targets": [
-            {
-              "expr": "sum by (reason) (rate(access_api_swipe_total{decision=\"DENY\"}[5m]))",
-              "refId": "A",
-              "legendFormat": "{{reason}}"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "reqps",
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 1,
-                "fillOpacity": 10
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi"
-            }
-          }
-        },
-        {
-          "id": 9,
-          "type": "piechart",
-          "title": "DENY 原因占比",
-          "gridPos": {
-            "h": 8,
-            "w": 4,
-            "x": 20,
-            "y": 15
-          },
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
           },
           "targets": [
             {
               "expr": "sum by (reason) (increase(access_api_swipe_total{decision=\"DENY\"}[5m]))",
-              "refId": "A",
-              "legendFormat": "{{reason}}"
+              "legendFormat": "{{reason}}",
+              "refId": "A"
             }
           ],
-          "options": {
-            "legend": {
-              "displayMode": "table",
-              "placement": "right",
-              "showLegend": true
-            }
-          }
+          "title": "DENY 原因占比",
+          "type": "piechart"
         }
       ],
       "refresh": "5s",
@@ -481,11 +774,13 @@ data:
         "from": "now-15m",
         "to": "now"
       },
+      "timeRangeUpdatedDuringEditOrView": false,
       "timepicker": {},
       "timezone": "browser",
       "title": "Access Control — Shift Change Monitor",
       "uid": "access-control-shift",
-      "version": 1
+      "version": 1,
+      "weekStart": ""
     }
   access-analytics.json: |
     {

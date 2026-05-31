@@ -52,7 +52,17 @@ func main() {
 		body, _ := json.Marshal(reqBody)
 
 		start := time.Now()
-		resp, err := client.Post(url, "application/json", bytes.NewReader(body))
+		req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+		var resp *http.Response
+		if err == nil {
+			req.Header.Set("Content-Type", "application/json")
+			apiKey := os.Getenv("API_KEY")
+			if apiKey == "" {
+				apiKey = "dev-api-key-2026"
+			}
+			req.Header.Set("X-API-Key", apiKey)
+			resp, err = client.Do(req)
+		}
 		latency := time.Since(start)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "request failed: %v\n", err)
