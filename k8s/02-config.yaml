@@ -16,7 +16,7 @@ data:
   KAFKA_BROKERS: "kafka:9092"
   REDIS_ADDR: "10.140.0.3:6379"
   REDIS_CLUSTER: "true"
-  CLICKHOUSE_ADDR: "jm9s3w1q3z.asia-southeast1.gcp.clickhouse.cloud:9440"
+  CLICKHOUSE_ADDR: "${CLICKHOUSE_ADDR}"
   API_KEY: "dev-api-key-2026"
   RATE_LIMIT_RPS_ACCESS: "100"
   RATE_LIMIT_RPS_ADMIN: "20"

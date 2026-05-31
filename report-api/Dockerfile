@@ -11,6 +11,7 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /report-api .
 COPY report-api/report-ui ./report-ui
+RUN mkdir -p /app/exports && chown -R nobody:nobody /app/exports /app
 USER nobody
 EXPOSE 8082
 CMD ["./report-api"]
