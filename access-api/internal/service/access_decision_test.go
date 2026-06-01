@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/tsmc/access-api/internal/cache"
 	"github.com/tsmc/access-api/internal/model"
 )
 
@@ -71,6 +72,27 @@ func (m *mockCache) SetCardMapping(_ context.Context, cardUID, userID string) er
 	}
 	m.cards[cardUID] = userID
 	return nil
+}
+
+// BatchRead implements the hot-path pipeline read used by Evaluate.
+func (m *mockCache) BatchRead(_ context.Context, cardUID, userID string) (cache.BatchReadResult, error) {
+	if m.readErr != nil {
+		return cache.BatchReadResult{}, m.readErr
+	}
+	var result cache.BatchReadResult
+	// Card mapping
+	if cardUID != "" && m.cards != nil {
+		result.MappedUserID = m.cards[cardUID]
+	}
+	// Permission denied
+	if m.denied != nil {
+		result.IsDenied = m.denied[userID]
+	}
+	// Passback state
+	if m.passback != nil {
+		result.PassbackState = m.passback[userID]
+	}
+	return result, nil
 }
 
 type mockDB struct {

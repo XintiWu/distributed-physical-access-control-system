@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/tsmc/access-api/internal/cache"
 	"github.com/tsmc/access-api/internal/model"
 	"github.com/tsmc/access-api/internal/service"
 )
@@ -63,6 +64,20 @@ func (m *mockCacheStore) LookupCard(_ context.Context, _ string) (string, error)
 
 func (m *mockCacheStore) SetCardMapping(_ context.Context, _, _ string) error {
 	return m.readErr
+}
+
+func (m *mockCacheStore) BatchRead(_ context.Context, cardUID, userID string) (cache.BatchReadResult, error) {
+	if m.readErr != nil {
+		return cache.BatchReadResult{}, m.readErr
+	}
+	var result cache.BatchReadResult
+	if m.denied != nil {
+		result.IsDenied = m.denied[userID]
+	}
+	if m.passback != nil {
+		result.PassbackState = m.passback[userID]
+	}
+	return result, nil
 }
 
 type mockPublisher struct {

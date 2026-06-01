@@ -1,0 +1,3 @@
+TRUNCATE TABLE access_control.inout_events;
+TRUNCATE TABLE access_control.pre_aggregated_reports;
+TRUNCATE TABLE access_control.door_traffic_minute;

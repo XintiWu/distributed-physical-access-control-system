@@ -29,10 +29,10 @@ spec:
         - containerPort: 8080
         resources:
           requests:
-            cpu: 10m
-            memory: 32Mi
+            cpu: 200m
+            memory: 64Mi
           limits:
-            cpu: 500m
+            cpu: 1000m
             memory: 256Mi
         env:
         - name: HTTP_ADDR
@@ -85,6 +85,8 @@ spec:
             configMapKeyRef:
               name: app-config
               key: RATE_LIMIT_RPS_ACCESS
+        - name: OUTBOX_DIR
+          value: /tmp/outbox
 
         readinessProbe:
           httpGet:
@@ -122,7 +124,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: access-api
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 20
   metrics:
   - type: Resource
@@ -130,4 +132,4 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70
+        averageUtilization: 60

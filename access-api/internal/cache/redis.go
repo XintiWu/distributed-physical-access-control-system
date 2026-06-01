@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -11,6 +12,13 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/tsmc/access-api/internal/model"
 )
+
+// BatchReadResult holds the results of a pipelined read for a single swipe request.
+type BatchReadResult struct {
+	MappedUserID  string            // card → userID mapping (empty if cardUID was empty or not found)
+	IsDenied      bool              // true if user has an active permission-denied flag
+	PassbackState model.PassbackState // last known passback state for the user
+}
 
 const (
 	passbackTTL = 24 * time.Hour
@@ -53,6 +61,60 @@ func NewRedisCache(addr string) *RedisCache {
 
 func (c *RedisCache) Ping(ctx context.Context) error {
 	return c.client.Ping(ctx).Err()
+}
+
+// BatchRead fetches card mapping, permission-denied flag, and passback state in a
+// single Redis pipeline, reducing serial RTTs from 3 to 1 on the hot path.
+func (c *RedisCache) BatchRead(ctx context.Context, cardUID, userID string) (BatchReadResult, error) {
+	pipe := c.client.Pipeline()
+
+	var cardCmd *redis.StringCmd
+	if cardUID != "" {
+		cardCmd = pipe.Get(ctx, cardKey(cardUID))
+	}
+	deniedCmd := pipe.Exists(ctx, permDeniedKey(userID))
+	passbackCmd := pipe.Get(ctx, passbackKey(userID))
+
+	_, execErr := pipe.Exec(ctx)
+	// execErr may be redis.Nil (some keys missing) — that is normal; check each cmd individually.
+	if execErr != nil && !errors.Is(execErr, redis.Nil) {
+		cacheOps.WithLabelValues("batch_read", "error").Inc()
+		return BatchReadResult{}, execErr
+	}
+	cacheOps.WithLabelValues("batch_read", "ok").Inc()
+
+	var result BatchReadResult
+
+	// Card mapping
+	if cardCmd != nil {
+		val, err := cardCmd.Result()
+		if err == nil {
+			result.MappedUserID = val
+		} else if !errors.Is(err, redis.Nil) {
+			return BatchReadResult{}, err
+		}
+	}
+
+	// Permission denied
+	if n, err := deniedCmd.Result(); err == nil {
+		result.IsDenied = n > 0
+	} else if !errors.Is(err, redis.Nil) {
+		return BatchReadResult{}, err
+	}
+
+	// Passback state
+	if val, err := passbackCmd.Result(); err == nil {
+		switch val {
+		case string(model.PassbackIN):
+			result.PassbackState = model.PassbackIN
+		case string(model.PassbackOUT):
+			result.PassbackState = model.PassbackOUT
+		default:
+			result.PassbackState = model.PassbackNone
+		}
+	} // redis.Nil → PassbackNone (zero value), which is correct
+
+	return result, nil
 }
 
 func (c *RedisCache) IsDenied(ctx context.Context, userID string) (bool, error) {

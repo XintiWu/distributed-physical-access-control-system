@@ -10,6 +10,7 @@ FROM alpine:3.20
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /access-api .
+RUN mkdir -p /data/outbox && chown -R nobody:nobody /data
 USER nobody
 EXPOSE 8080
 CMD ["./access-api"]
