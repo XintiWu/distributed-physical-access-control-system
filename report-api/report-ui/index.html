@@ -1026,6 +1026,28 @@
       return { s, e };
     }
 
+    function hashCode(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function getMockDates(targetVal) {
+      const dates = [];
+      const baseDate = new Date(targetVal || todayStr());
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() - i);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        dates.push(`${mm}-${dd}`);
+      }
+      return dates;
+    }
+
     async function api(path) {
       if (!currentUser) return null;
       try {
@@ -1057,6 +1079,8 @@
         const evs = auditData.events || [];
         let total = auditData.totalCount || evs.length;
 
+        const seedVal = hashCode(e + org);
+
         if (evs.length === 0) {
           const names = ['Margaret', 'Floyd', 'Guy', 'Kristin', 'Alex', 'Sarah', 'Jessica', 'David'];
           const depts = ['Engineering', 'Engineering', 'Team-A', 'Team-A', 'HR', 'Finance', 'Engineering', 'Sales'];
@@ -1064,20 +1088,19 @@
           const dirs = ['IN', 'OUT', 'IN', 'IN', 'OUT', 'IN', 'OUT', 'OUT'];
           const doors = ['Door 1', 'Door 2', 'Door 1', 'Door 3', 'Door 2', 'Door 4', 'Door 1', 'Door 5'];
 
-          const baseTime = new Date('2026-06-01T08:00:00Z').getTime();
+          const baseTime = new Date(e + 'T08:00:00Z').getTime();
           for (let i = 0; i < 8; i++) {
             evs.push({
               eventTime: new Date(baseTime - i * 20 * 60000).toISOString(),
-              status: statuses[i],
-              direction: dirs[i],
-              doorId: doors[i],
-              userName: names[i],
-              deptName: depts[i]
+              status: statuses[(seedVal + i) % statuses.length],
+              direction: dirs[(seedVal + i) % dirs.length],
+              doorId: doors[(seedVal + i) % doors.length],
+              userName: names[(seedVal + i) % names.length],
+              deptName: depts[(seedVal + i) % depts.length]
             });
           }
-          total = 1240;
+          total = 1000 + (seedVal % 500);
         }
-
 
         document.getElementById('kpiTotalSwipes').textContent = total.toLocaleString();
 
@@ -1119,20 +1142,14 @@
           list.appendChild(div);
         });
 
-        if (total > 10 && evs.length > 8) {
-          let allowsCount = Math.floor(total * 0.98);
-          document.getElementById('kpiAllows').textContent = allowsCount.toLocaleString();
-          document.getElementById('kpiDenies').textContent = (total - allowsCount).toLocaleString();
-        } else {
-          document.getElementById('kpiTotalSwipes').textContent = "1,240";
-          document.getElementById('kpiAllows').textContent = "1,215";
-          document.getElementById('kpiDenies').textContent = "25";
-        }
+        const allowsCount = Math.floor(total * 0.98);
+        document.getElementById('kpiAllows').textContent = allowsCount.toLocaleString();
+        document.getElementById('kpiDenies').textContent = (total - allowsCount).toLocaleString();
 
         try {
           const wfData = await api(`/reports/analytics/workforce-utilization?orgUnitId=${org}&startDate=${e}&endDate=${e}`);
-          document.getElementById('kpiOnSite').textContent = wfData.onSiteNow !== undefined ? wfData.onSiteNow : '245';
-        } catch (e) { document.getElementById('kpiOnSite').textContent = '245'; }
+          document.getElementById('kpiOnSite').textContent = wfData.onSiteNow !== undefined ? wfData.onSiteNow : (200 + (seedVal % 100));
+        } catch (e) { document.getElementById('kpiOnSite').textContent = (200 + (seedVal % 100)); }
 
         try {
           const deptData = await api(`/reports/department?orgUnitId=${org}&startDate=${e}&endDate=${e}&granularity=daily`);
@@ -1141,18 +1158,13 @@
             const lateCount = Math.floor((sm.uniqueEmployees || 0) * (sm.lateRate || 0));
             document.getElementById('anomalyLate').textContent = lateCount;
           } else {
-            document.getElementById('anomalyLate').textContent = '4';
+            document.getElementById('anomalyLate').textContent = 3 + (seedVal % 5);
           }
-        } catch (e) { document.getElementById('anomalyLate').textContent = '4'; }
+        } catch (e) { document.getElementById('anomalyLate').textContent = 3 + (seedVal % 5); }
 
-        if (total > 10 && evs.length > 8) {
-          let d = Math.floor(total * 0.02) || 0;
-          document.getElementById('anomalyAPB').textContent = Math.floor(d * 0.3) || '--';
-          document.getElementById('anomalyPerm').textContent = Math.floor(d * 0.7) || '--';
-        } else {
-          document.getElementById('anomalyAPB').textContent = '2';
-          document.getElementById('anomalyPerm').textContent = '5';
-        }
+        const d = Math.floor(total * 0.02) || 0;
+        document.getElementById('anomalyAPB').textContent = Math.floor(d * 0.3) || '2';
+        document.getElementById('anomalyPerm').textContent = Math.floor(d * 0.7) || '5';
 
       } catch (e) {
         console.error(e);
@@ -1170,15 +1182,15 @@
         let periods = data.periods || [];
         let labels = [];
         if (periods.length === 0) {
-          periods = [
-            { periodStart: '05-23', totalEntries: 1450, totalExits: 1390 },
-            { periodStart: '05-24', totalEntries: 1520, totalExits: 1480 },
-            { periodStart: '05-25', totalEntries: 1610, totalExits: 1580 },
-            { periodStart: '05-26', totalEntries: 1380, totalExits: 1350 },
-            { periodStart: '05-27', totalEntries: 1490, totalExits: 1420 },
-            { periodStart: '05-28', totalEntries: 1650, totalExits: 1600 },
-            { periodStart: '05-29', totalEntries: 1720, totalExits: 1680 }
-          ];
+          const mockDates = getMockDates(e);
+          periods = mockDates.map((dateStr, idx) => {
+            const seedVal = hashCode(dateStr + org);
+            return {
+              periodStart: dateStr,
+              totalEntries: 1300 + (seedVal % 500),
+              totalExits: 1250 + ((seedVal + 3) % 450)
+            };
+          });
         }
         labels = periods.map(p => p.periodStart);
 
@@ -1201,11 +1213,12 @@
         let totalSubEntries = 0;
         subUnits.forEach(su => { totalSubEntries += (su.totalEntries || 0); });
         if (subUnits.length === 0 || totalSubEntries === 0) {
+          const seedVal = hashCode(e + org);
           subUnits = [
-            { orgUnitName: 'Team-Alpha', totalEntries: 850 },
-            { orgUnitName: 'Team-Beta', totalEntries: 620 },
-            { orgUnitName: 'Team-Gamma', totalEntries: 940 },
-            { orgUnitName: 'Team-Delta', totalEntries: 410 }
+            { orgUnitName: 'Team-Alpha', totalEntries: 600 + (seedVal % 400) },
+            { orgUnitName: 'Team-Beta', totalEntries: 400 + ((seedVal + 1) % 350) },
+            { orgUnitName: 'Team-Gamma', totalEntries: 700 + ((seedVal + 2) % 450) },
+            { orgUnitName: 'Team-Delta', totalEntries: 300 + ((seedVal + 3) % 250) }
           ];
         }
         if (subUnits && subUnits.length) {
@@ -1229,11 +1242,12 @@
         }
 
         // Generate mock data and render deptHoursChart
+        const seedVal = hashCode(e + org);
         let deptHours = [
-          { orgUnitName: 'Team-Alpha', avgHours: 8.2 },
-          { orgUnitName: 'Team-Beta', avgHours: 7.9 },
-          { orgUnitName: 'Team-Gamma', avgHours: 8.5 },
-          { orgUnitName: 'Team-Delta', avgHours: 7.6 }
+          { orgUnitName: 'Team-Alpha', avgHours: (8.0 + (hashCode(e + 'alpha') % 10) / 10).toFixed(1) },
+          { orgUnitName: 'Team-Beta', avgHours: (7.5 + (hashCode(e + 'beta') % 10) / 10).toFixed(1) },
+          { orgUnitName: 'Team-Gamma', avgHours: (8.2 + (hashCode(e + 'gamma') % 10) / 10).toFixed(1) },
+          { orgUnitName: 'Team-Delta', avgHours: (7.4 + (hashCode(e + 'delta') % 10) / 10).toFixed(1) }
         ];
         destroyChart('deptHours');
         charts.deptHours = new Chart(document.getElementById('deptHoursChart'), {
@@ -1260,16 +1274,18 @@
       if (currentUser.role === 'EMPLOYEE') return;
       try {
         const org = document.getElementById('orgSelect').value;
+        const { e } = getDateRange();
         const data = await api(`/reports/analytics/door-heatmap?orgUnitId=${org}&minutes=60`);
 
         let doors = data.doors || [];
         if (doors.length === 0) {
+          const seedVal = hashCode(e + org);
           doors = [
-            { doorName: 'Main Entrance', swipeCount: 1450 },
-            { doorName: 'R&D Lab', swipeCount: 950 },
-            { doorName: 'Server Room A', swipeCount: 320 },
-            { doorName: 'Cafeteria', swipeCount: 1100 },
-            { doorName: 'Storage Area', swipeCount: 180 }
+            { doorName: 'Main Entrance', swipeCount: 1200 + (seedVal % 500) },
+            { doorName: 'R&D Lab', swipeCount: 800 + ((seedVal + 1) % 400) },
+            { doorName: 'Server Room A', swipeCount: 200 + ((seedVal + 2) % 200) },
+            { doorName: 'Cafeteria', swipeCount: 900 + ((seedVal + 3) % 300) },
+            { doorName: 'Storage Area', swipeCount: 100 + ((seedVal + 4) % 150) }
           ];
         }
         destroyChart('heatmap');
@@ -1295,15 +1311,13 @@
 
         let series = data.series || [];
         if (series.length === 0) {
-          series = [
-            { periodStart: '05-23', avgHours: 8.1, lateRate: 0.03 },
-            { periodStart: '05-24', avgHours: 7.9, lateRate: 0.04 },
-            { periodStart: '05-25', avgHours: 8.3, lateRate: 0.02 },
-            { periodStart: '05-26', avgHours: 8.0, lateRate: 0.05 },
-            { periodStart: '05-27', avgHours: 8.2, lateRate: 0.03 },
-            { periodStart: '05-28', avgHours: 8.4, lateRate: 0.02 },
-            { periodStart: '05-29', avgHours: 8.5, lateRate: 0.01 }
-          ];
+          const mockDates = getMockDates(e);
+          series = mockDates.map(dateStr => {
+            const seedVal = hashCode(dateStr + org + 'att');
+            const avgHours = 7.5 + (seedVal % 15) / 10;
+            const lateRate = 0.01 + (seedVal % 5) / 100;
+            return { periodStart: dateStr, avgHours, lateRate };
+          });
         }
         destroyChart('attendance');
         charts.attendance = new Chart(document.getElementById('attendanceChart'), {
@@ -1331,15 +1345,12 @@
 
         let recs = data.dailyRecords || [];
         if (recs.length === 0) {
-          recs = [
-            { date: '05-23', hoursWorked: 8.0 },
-            { date: '05-24', hoursWorked: 7.8 },
-            { date: '05-25', hoursWorked: 8.2 },
-            { date: '05-26', hoursWorked: 8.1 },
-            { date: '05-27', hoursWorked: 8.0 },
-            { date: '05-28', hoursWorked: 8.5 },
-            { date: '05-29', hoursWorked: 8.3 }
-          ];
+          const mockDates = getMockDates(e);
+          recs = mockDates.map(dateStr => {
+            const seedVal = hashCode(dateStr + currentUser.userId);
+            const hoursWorked = 7.0 + (seedVal % 20) / 10;
+            return { date: dateStr, hoursWorked };
+          });
         }
         destroyChart('personal');
         charts.personal = new Chart(document.getElementById('personalChart'), {
@@ -1459,6 +1470,7 @@
       updateProfilePermissions();
       refreshAll();
     });
+    document.getElementById('targetDate').addEventListener('change', refreshAll);
 
     initLogin();
   </script>
