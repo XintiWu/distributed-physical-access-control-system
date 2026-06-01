@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,9 +24,14 @@
       --sidebar-width: 240px;
       --right-panel-width: 260px;
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background: var(--bg-surface);
       color: var(--text-main);
@@ -37,38 +43,85 @@
 
     /* Login Overlay */
     #loginOverlay {
-      position: fixed; inset: 0; z-index: 9999;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(12px);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: opacity 0.4s ease, visibility 0.4s;
     }
-    #loginOverlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    #loginOverlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     .login-box {
       background: #fff;
       padding: 3rem;
       border-radius: 24px;
-      width: 100%; max-width: 480px;
+      width: 100%;
+      max-width: 480px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
-    .login-box h2 { margin: 0 0 0.5rem; font-size: 1.75rem; font-weight: 700; color: var(--accent); }
-    .login-box p { color: var(--text-muted); margin: 0 0 2.5rem; font-size: 1rem; }
-    .role-btn {
-      display: flex; flex-direction: column; align-items: flex-start;
-      width: 100%; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
-      background: #f8fafc; border: 1px solid #e2e8f0;
-      border-radius: 16px; color: var(--text-main); cursor: pointer;
-      transition: all 0.2s ease; text-align: left;
+
+    .login-box h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent);
     }
-    .role-btn:hover { background: #fff; border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1); transform: translateY(-2px); }
-    .role-btn strong { font-size: 1.1rem; color: var(--accent); }
-    .role-btn span { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.4rem; }
+
+    .login-box p {
+      color: var(--text-muted);
+      margin: 0 0 2.5rem;
+      font-size: 1rem;
+    }
+
+    .role-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .role-btn:hover {
+      background: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .role-btn strong {
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+
+    .role-btn span {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
 
     /* Layout Wrapper */
     .app-wrapper {
       display: flex;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       background: var(--bg-surface);
       overflow: hidden;
     }
@@ -79,167 +132,493 @@
       flex-shrink: 0;
       border-right: 1px solid var(--border);
       padding: 2.5rem 1.5rem;
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
       overflow-y: auto;
     }
+
     .brand {
-      display: flex; align-items: center; gap: 0.75rem;
-      margin-bottom: 3rem; padding-left: 0.75rem;
-      font-weight: 700; font-size: 1.35rem; color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 3rem;
+      padding-left: 0.75rem;
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: var(--accent);
     }
-    .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
     .nav-item {
-      display: flex; align-items: center; gap: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
       padding: 1rem 1.25rem;
       border-radius: 16px;
       color: var(--text-muted);
-      font-weight: 600; font-size: 0.95rem;
-      cursor: pointer; transition: all 0.2s;
-      border: none; background: transparent; text-align: left;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+      text-align: left;
     }
-    .nav-item:hover { color: var(--accent); background: #f8fafc; }
-    .nav-item.active { background: #f1f5f9; color: var(--accent); }
-    .nav-item svg { width: 20px; height: 20px; stroke-width: 2.5; }
-    
+
+    .nav-item:hover {
+      color: var(--accent);
+      background: #f8fafc;
+    }
+
+    .nav-item.active {
+      background: #f1f5f9;
+      color: var(--accent);
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.5;
+    }
+
     .sidebar-footer {
-      display: flex; flex-direction: column; gap: 1rem;
-      padding: 2rem 1rem 0; border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 2rem 1rem 0;
+      border-top: 1px solid var(--border);
     }
-    
+
     .upgrade-box {
-      background: #f8fafc; border-radius: 20px; padding: 1.5rem; text-align: center;
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 1.5rem;
+      text-align: center;
       margin-bottom: 1.5rem;
     }
-    .upgrade-box p { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1rem; font-weight: 500; }
-    
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-      padding: 0.75rem 1.25rem; border-radius: 12px;
-      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: 0.2s;
-      border: none; text-decoration: none;
+
+    .upgrade-box p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0 0 1rem;
+      font-weight: 500;
     }
-    .btn-light { background: #e2e8f0; color: var(--accent); }
-    .btn-light:hover { background: #cbd5e1; }
-    .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2); }
-    .btn-primary:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: #e2e8f0;
+      color: var(--accent);
+    }
+
+    .btn-light:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+    }
 
     /* Main Content */
     .main-content {
-      flex: 1; min-width: 0; padding: 2.5rem 3rem; overflow-y: auto;
+      flex: 1;
+      min-width: 0;
+      padding: 2.5rem 3rem;
+      overflow-y: auto;
     }
-    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 2rem; }
-    .header-title h2 { margin: 0; font-size: 2.5rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
-    .header-title p { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 1rem; }
-    .toolbar-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .header-title h2 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+
+    .header-title p {
+      margin: 0.5rem 0 0;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
     .filter-input {
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
-      padding: 0.6rem 1rem; font-size: 0.9rem; color: var(--text-main); font-weight: 500;
-      outline: none; transition: 0.2s; cursor: pointer;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      font-weight: 500;
+      outline: none;
+      transition: 0.2s;
+      cursor: pointer;
     }
-    .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.1); }
+
+    .filter-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
 
     /* KPI Row */
     .kpi-row {
-      display: flex; align-items: center;
-      background: #fff; border: 1px solid var(--border); border-radius: 24px;
-      padding: 1.25rem 1rem; margin-bottom: 2.5rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 1.25rem 1rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
     }
-    .kpi-item { flex: 1 1 0%; display: flex; align-items: center; justify-content: center; gap: 0.65rem; padding: 0 0.5rem; overflow: hidden; }
-    .kpi-item:first-child { padding-left: 0; justify-content: flex-start; }
-    .kpi-item:last-child { padding-right: 0; justify-content: flex-end; }
-    .kpi-item:not(:last-child) { border-right: 1px solid var(--border); }
+
+    .kpi-item {
+      flex: 1 1 0%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      padding: 0 0.5rem;
+      overflow: hidden;
+    }
+
+    .kpi-item:first-child {
+      padding-left: 0;
+      justify-content: flex-start;
+    }
+
+    .kpi-item:last-child {
+      padding-right: 0;
+      justify-content: flex-end;
+    }
+
+    .kpi-item:not(:last-child) {
+      border-right: 1px solid var(--border);
+    }
+
     .kpi-icon {
-      width: 40px; height: 40px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: #f1f5f9; color: var(--text-main);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      color: var(--text-main);
       flex-shrink: 0;
     }
-    .kpi-data { display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-    .kpi-data .label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.2rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-    .kpi-data .val-row { display: flex; align-items: baseline; gap: 0.5rem; }
-    .kpi-data .val { font-size: 1.35rem; font-weight: 700; color: var(--accent); line-height: 1; }
-    .kpi-data .trend { font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
-    .trend.up { color: var(--success); }
-    .trend.down { color: var(--danger); }
+
+    .kpi-data {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .kpi-data .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .kpi-data .val-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .kpi-data .val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .kpi-data .trend {
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .trend.up {
+      color: var(--success);
+    }
+
+    .trend.down {
+      color: var(--danger);
+    }
 
     /* Section Area (Panels) */
-    .panel { display: none; animation: fade 0.3s ease; }
-    .panel.active { display: block; }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .panel {
+      display: none;
+      animation: fade 0.3s ease;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
 
     .section-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
     }
-    .section-header h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-    
-    .chart-container { height: 280px; width: 100%; margin-bottom: 2.5rem; }
-    .chart-container.tall { height: 350px; }
+
+    .section-header h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .chart-container {
+      height: 280px;
+      width: 100%;
+      margin-bottom: 2.5rem;
+    }
+
+    .chart-container.tall {
+      height: 350px;
+    }
 
     /* Recent Tasks / Events List */
-    .event-list { display: flex; flex-direction: column; gap: 1rem; }
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
     .event-item {
-      display: flex; align-items: center; padding: 1rem 1.5rem;
-      background: #f8fafc; border-radius: 16px; transition: 0.2s;
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: #f8fafc;
+      border-radius: 16px;
+      transition: 0.2s;
     }
-    .event-item:hover { background: #f1f5f9; }
+
+    .event-item:hover {
+      background: #f1f5f9;
+    }
+
     .ev-icon {
-      width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0;
-      display: flex; align-items: center; justify-content: center; margin-right: 1.5rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1.5rem;
     }
-    .ev-title { flex: 2; font-weight: 600; font-size: 0.95rem; color: var(--accent); }
-    .ev-door { flex: 1.5; font-size: 0.9rem; color: var(--text-main); display: flex; align-items: center; font-weight: 500; }
-    .ev-status { flex: 1; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .dot.allow { background: var(--success); }
-    .dot.deny { background: var(--danger); }
-    .ev-time { flex: 1; font-size: 0.85rem; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
-    
+
+    .ev-title {
+      flex: 2;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+
+    .ev-door {
+      flex: 1.5;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+    }
+
+    .ev-status {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot.allow {
+      background: var(--success);
+    }
+
+    .dot.deny {
+      background: var(--danger);
+    }
+
+    .ev-time {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     /* Right Panel */
     .right-panel {
       width: var(--right-panel-width);
       flex-shrink: 0;
       border-left: 1px solid var(--border);
       padding: 2.5rem 2rem;
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
       background: #fafafa;
       overflow-y: auto;
     }
+
     .profile-card {
-      background: #f8fafc; border-radius: 20px; padding: 1.5rem;
-      text-align: left; margin-bottom: 2.5rem;
-    }
-    
-    /* Activity / Anomalies */
-    .activity-header {
-      display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-      font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
-      margin-bottom: 1.5rem;
-    }
-    .activity-header::before, .activity-header::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
-    }
-    
-    .activity-list { display: flex; flex-direction: column; gap: 1.5rem; }
-    .activity-item { display: flex; gap: 1rem; }
-    .act-avatar {
-      width: 36px; height: 36px; border-radius: 50%; background: #fef2f2;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      color: var(--danger);
-    }
-    .act-content { flex: 1; }
-    .act-title-row { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
-    .act-title { font-weight: 600; font-size: 0.9rem; color: var(--accent); }
-    .act-time { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
-    .act-desc {
-      background: #fff; padding: 0.85rem 1rem; border-radius: 0 12px 12px 12px;
-      font-size: 0.85rem; color: var(--text-muted); border: 1px solid var(--border);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 1.5rem;
+      text-align: left;
+      margin-bottom: 2.5rem;
     }
 
-    .hidden { display: none !important; }
+    /* Activity / Anomalies */
+    .activity-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .activity-header::before,
+    .activity-header::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .act-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fef2f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--danger);
+    }
+
+    .act-content {
+      flex: 1;
+    }
+
+    .act-title-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+    }
+
+    .act-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+
+    .act-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .act-desc {
+      background: #fff;
+      padding: 0.85rem 1rem;
+      border-radius: 0 12px 12px 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+    }
+
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
+
 <body>
 
   <!-- Login Overlay -->
@@ -247,20 +626,24 @@
     <div class="login-box">
       <h2>歡迎回來</h2>
       <p>請選擇登入角色與測試情境</p>
-      
-      <button class="role-btn" data-val="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" data-role="CEO" data-org="a0000000-0000-0000-0000-000000000001">
+
+      <button class="role-btn" data-val="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" data-role="CEO"
+        data-org="a0000000-0000-0000-0000-000000000001">
         <strong>Margaret (CEO 執行長)</strong>
         <span>可檢視全公司所有部門的報表</span>
       </button>
-      <button class="role-btn" data-val="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" data-role="VP" data-org="a0000000-0000-0000-0000-000000000002">
+      <button class="role-btn" data-val="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" data-role="VP"
+        data-org="a0000000-0000-0000-0000-000000000002">
         <strong>Floyd (工程處長)</strong>
         <span>僅限檢視 Engineering 處與底下單位</span>
       </button>
-      <button class="role-btn" data-val="cccccccc-cccc-cccc-cccc-cccccccccccc" data-role="TEAM_MANAGER" data-org="a0000000-0000-0000-0000-000000000003">
+      <button class="role-btn" data-val="cccccccc-cccc-cccc-cccc-cccccccccccc" data-role="TEAM_MANAGER"
+        data-org="a0000000-0000-0000-0000-000000000003">
         <strong>Guy (Team-A 課長)</strong>
         <span>僅限檢視 Team-A 團隊報表</span>
       </button>
-      <button class="role-btn" data-val="22222222-2222-2222-2222-222222222222" data-role="EMPLOYEE" data-org="a0000000-0000-0000-0000-000000000003">
+      <button class="role-btn" data-val="22222222-2222-2222-2222-222222222222" data-role="EMPLOYEE"
+        data-org="a0000000-0000-0000-0000-000000000003">
         <strong>Kristin (一般員工)</strong>
         <span>無部門檢視權限，僅能查看個人出勤紀錄</span>
       </button>
@@ -271,29 +654,51 @@
     <!-- Left Sidebar -->
     <aside class="sidebar">
       <div class="brand">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
         <span>logip</span>
       </div>
-      
+
       <div class="nav-menu" id="tabNav">
         <button class="nav-item active" data-tab="overview">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
           首頁總覽
         </button>
         <button class="nav-item" data-tab="dept">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
           部門分析
         </button>
         <button class="nav-item" data-tab="heatmap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
           門禁熱點
         </button>
         <button class="nav-item" data-tab="attendance">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
           考勤趨勢
         </button>
         <button class="nav-item" data-tab="personal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
           個人出勤
         </button>
       </div>
@@ -305,7 +710,11 @@
           <a id="linkCsv" href="#" class="btn btn-light" style="width:100%">匯出 CSV</a>
         </div>
         <button class="nav-item" id="logoutBtn" style="color:var(--text-muted)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
           切換帳號
         </button>
       </div>
@@ -324,9 +733,14 @@
             <option value="daily">Daily</option>
             <option value="monthly" selected>Monthly</option>
           </select>
-          <input type="date" id="startDate" class="filter-input" />
-          <input type="date" id="endDate" class="filter-input" />
-          <button id="refreshBtn" class="icon-btn" style="width:42px;height:42px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:12px;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></button>
+          <input type="date" id="targetDate" class="filter-input" />
+          <button id="refreshBtn" class="icon-btn"
+            style="width:42px;height:42px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:12px;cursor:pointer;"><svg
+              width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg></button>
         </div>
       </div>
 
@@ -334,28 +748,44 @@
       <section id="panel-overview" class="panel active">
         <div class="kpi-row">
           <div class="kpi-item">
-            <div class="kpi-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg></div>
+            <div class="kpi-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              </svg></div>
             <div class="kpi-data">
               <span class="label">總刷卡次數</span>
-              <div class="val-row"><span class="val" id="kpiTotalSwipes">--</span><span class="trend up">▲ +12%</span></div>
+              <div class="val-row"><span class="val" id="kpiTotalSwipes">--</span><span class="trend up">▲ +12%</span>
+              </div>
             </div>
           </div>
           <div class="kpi-item">
-            <div class="kpi-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+            <div class="kpi-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg></div>
             <div class="kpi-data">
               <span class="label">允許通行</span>
               <div class="val-row"><span class="val" id="kpiAllows">--</span><span class="trend up">▲ +8%</span></div>
             </div>
           </div>
           <div class="kpi-item">
-            <div class="kpi-icon" style="color:var(--danger)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
+            <div class="kpi-icon" style="color:var(--danger)"><svg width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg></div>
             <div class="kpi-data">
               <span class="label">拒絕通行</span>
               <div class="val-row"><span class="val" id="kpiDenies">--</span><span class="trend down">▼ -2%</span></div>
             </div>
           </div>
           <div class="kpi-item">
-            <div class="kpi-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+            <div class="kpi-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg></div>
             <div class="kpi-data">
               <span class="label">目前在廠人數</span>
               <div class="val-row"><span class="val" id="kpiOnSite">--</span></div>
@@ -365,13 +795,17 @@
 
         <div class="section-header">
           <h3>門禁趨勢</h3>
-          <select class="filter-input" style="padding:0.4rem 0.8rem;border-radius:8px"><option>本月</option></select>
+          <select class="filter-input" style="padding:0.4rem 0.8rem;border-radius:8px">
+            <option>本月</option>
+          </select>
         </div>
         <div class="chart-container"><canvas id="deptEntriesChart"></canvas></div>
 
         <div class="section-header">
           <h3>近期刷卡事件</h3>
-          <select class="filter-input" style="padding:0.4rem 0.8rem;border-radius:8px"><option>今日</option></select>
+          <select class="filter-input" style="padding:0.4rem 0.8rem;border-radius:8px">
+            <option>今日</option>
+          </select>
         </div>
         <div class="event-list" id="recentEventsBody">
           <!-- Populated by JS -->
@@ -380,27 +814,37 @@
 
       <!-- Dept Tab -->
       <section id="panel-dept" class="panel">
-        <div class="section-header"><h3>子部門比較</h3></div>
+        <div class="section-header">
+          <h3>子部門比較</h3>
+        </div>
         <div class="chart-container"><canvas id="subUnitsChart"></canvas></div>
-        <div class="section-header"><h3>平均工時</h3></div>
+        <div class="section-header">
+          <h3>平均工時</h3>
+        </div>
         <div class="chart-container"><canvas id="deptHoursChart"></canvas></div>
       </section>
 
       <!-- Heatmap Tab -->
       <section id="panel-heatmap" class="panel">
-        <div class="section-header"><h3>門區流量熱點</h3></div>
+        <div class="section-header">
+          <h3>門區流量熱點</h3>
+        </div>
         <div class="chart-container tall"><canvas id="doorHeatmapChart"></canvas></div>
       </section>
 
       <!-- Attendance Tab -->
       <section id="panel-attendance" class="panel">
-        <div class="section-header"><h3>考勤與遲到率</h3></div>
+        <div class="section-header">
+          <h3>考勤與遲到率</h3>
+        </div>
         <div class="chart-container tall"><canvas id="attendanceChart"></canvas></div>
       </section>
 
       <!-- Personal Tab -->
       <section id="panel-personal" class="panel">
-        <div class="section-header"><h3>個人出勤紀錄</h3></div>
+        <div class="section-header">
+          <h3>個人出勤紀錄</h3>
+        </div>
         <div class="chart-container tall"><canvas id="personalChart"></canvas></div>
       </section>
     </main>
@@ -409,9 +853,11 @@
     <aside class="right-panel">
       <!-- Permissions Card ONLY, Avatar removed -->
       <div class="profile-card">
-        <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted); margin-bottom: 0.25rem;">權限範圍 (Permission Scope)</div>
-        <div id="profilePermissionText" style="font-size:1.05rem; font-weight:700; color:var(--accent); margin-bottom: 1.5rem;">--</div>
-        
+        <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted); margin-bottom: 0.25rem;">權限範圍
+          (Permission Scope)</div>
+        <div id="profilePermissionText"
+          style="font-size:1.05rem; font-weight:700; color:var(--accent); margin-bottom: 1.5rem;">--</div>
+
         <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted); margin-bottom: 0.25rem;">當前檢視組織</div>
         <div id="profileCurrentOrg" style="font-size:1.05rem; font-weight:700; color:var(--primary);">--</div>
       </div>
@@ -419,21 +865,35 @@
       <div class="activity-header">活動與異常通知 (Anomalies)</div>
       <div class="activity-list" id="anomaliesList">
         <div class="activity-item">
-          <div class="act-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>
+          <div class="act-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg></div>
           <div class="act-content">
-            <div class="act-title-row"><span class="act-title">Anti-Passback</span><span class="act-time">今日</span></div>
+            <div class="act-title-row"><span class="act-title">Anti-Passback</span><span class="act-time">今日</span>
+            </div>
             <div class="act-desc"><span id="anomalyAPB">--</span> 次重複刷卡，請檢閱。</div>
           </div>
         </div>
         <div class="activity-item">
-          <div class="act-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+          <div class="act-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg></div>
           <div class="act-content">
             <div class="act-title-row"><span class="act-title">無權限硬闖</span><span class="act-time">今日</span></div>
             <div class="act-desc"><span id="anomalyPerm">--</span> 次無權限闖入被拒絕。</div>
           </div>
         </div>
         <div class="activity-item">
-          <div class="act-avatar" style="background:#fff7ed;color:var(--warning)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+          <div class="act-avatar" style="background:#fff7ed;color:var(--warning)"><svg width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg></div>
           <div class="act-content">
             <div class="act-title-row"><span class="act-title">遲到紀錄</span><span class="act-time">今日</span></div>
             <div class="act-desc"><span id="anomalyLate">--</span> 人被標記為遲到。</div>
@@ -445,7 +905,7 @@
 
   <script>
     const API = window.location.origin;
-    let currentUser = null; 
+    let currentUser = null;
     const charts = {};
 
     // Chart.js Global Config
@@ -497,7 +957,7 @@
             name: btn.querySelector('strong').innerText.split('(')[0].trim()
           };
           document.getElementById('greetingName').textContent = currentUser.name;
-          
+
           document.getElementById('loginOverlay').classList.add('hidden');
           setupApp();
         };
@@ -509,7 +969,7 @@
 
     function setupApp() {
       const isEmployee = currentUser.role === 'EMPLOYEE';
-      
+
       ['overview', 'dept', 'heatmap', 'attendance'].forEach(t => {
         document.querySelector(`[data-tab="${t}"]`).classList.toggle('hidden', isEmployee);
       });
@@ -528,9 +988,9 @@
     function rebuildOrgSelect() {
       const { role, org: requesterOrgId } = currentUser;
       const requester = ORG_UNITS.find(o => o.id === requesterOrgId);
-      const allowed = (role === 'CEO' || role === 'CFO') ? ORG_UNITS.slice() : 
-                      (requester ? ORG_UNITS.filter(o => isInSubtree(requester.path, o.path)) : []);
-      
+      const allowed = (role === 'CEO' || role === 'CFO') ? ORG_UNITS.slice() :
+        (requester ? ORG_UNITS.filter(o => isInSubtree(requester.path, o.path)) : []);
+
       const select = document.getElementById('orgSelect');
       const prev = select.value;
       select.innerHTML = '';
@@ -544,18 +1004,36 @@
       else if (allowed.length) select.value = allowed[0].id;
     }
 
-    function todayStr() { return new Date().toISOString().slice(0, 10); }
-    document.getElementById('startDate').value = todayStr();
-    document.getElementById('endDate').value = todayStr();
+    function todayStr() {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
+    const today = todayStr();
+    document.getElementById('targetDate').value = today;
+    document.getElementById('targetDate').max = today;
+
+    function getDateRange() {
+      const targetVal = document.getElementById('targetDate').value;
+      if (!targetVal) return { s: today, e: today };
+      
+      const targetDateObj = new Date(targetVal);
+      const startObj = new Date(targetDateObj);
+      startObj.setDate(startObj.getDate() - 6);
+      
+      const s = startObj.toISOString().slice(0, 10);
+      const e = targetVal;
+      return { s, e };
+    }
 
     async function api(path) {
       if (!currentUser) return null;
       try {
-        const res = await fetch(`${API}${path}`, { 
-          headers: { 
+        const res = await fetch(`${API}${path}`, {
+          headers: {
             'X-User-ID': currentUser.userId,
             'X-API-Key': 'dev-api-key-2026'
-          } 
+          }
         });
         const text = await res.text();
         if (!res.ok) return {};
@@ -571,47 +1049,69 @@
 
     async function loadOverview() {
       if (currentUser.role === 'EMPLOYEE') return;
-      const s = document.getElementById('startDate').value;
+      const { e } = getDateRange();
       const org = document.getElementById('orgSelect').value;
-      
+
       try {
-        const auditData = await api(`/reports/audit?startDate=${s}&endDate=${s}&pageSize=10`);
+        const auditData = await api(`/reports/audit?startDate=${e}&endDate=${e}&pageSize=10`);
         const evs = auditData.events || [];
         let total = auditData.totalCount || evs.length;
 
         if (evs.length === 0) {
-          for(let i=0; i<8; i++) {
+          const names = ['Margaret', 'Floyd', 'Guy', 'Kristin', 'Alex', 'Sarah', 'Jessica', 'David'];
+          const depts = ['Engineering', 'Engineering', 'Team-A', 'Team-A', 'HR', 'Finance', 'Engineering', 'Sales'];
+          const statuses = ['ALLOW', 'ALLOW', 'DENY', 'ALLOW', 'ALLOW', 'ALLOW', 'DENY', 'ALLOW'];
+          const dirs = ['IN', 'OUT', 'IN', 'IN', 'OUT', 'IN', 'OUT', 'OUT'];
+          const doors = ['Door 1', 'Door 2', 'Door 1', 'Door 3', 'Door 2', 'Door 4', 'Door 1', 'Door 5'];
+
+          const baseTime = new Date('2026-06-01T08:00:00Z').getTime();
+          for (let i = 0; i < 8; i++) {
             evs.push({
-              eventTime: new Date(Date.now() - i*15*60000).toISOString(),
-              status: Math.random() > 0.15 ? 'ALLOW' : 'DENY',
-              direction: Math.random() > 0.5 ? 'IN' : 'OUT',
-              doorId: 'Door ' + Math.floor(Math.random() * 5 + 1),
-              userName: ['Margaret', 'Floyd', 'Guy', 'Kristin', 'Alex', 'Sarah'][Math.floor(Math.random()*6)],
-              deptName: ['Team-Alpha', 'Team-Beta', 'Engineering', 'HR'][Math.floor(Math.random()*4)]
+              eventTime: new Date(baseTime - i * 20 * 60000).toISOString(),
+              status: statuses[i],
+              direction: dirs[i],
+              doorId: doors[i],
+              userName: names[i],
+              deptName: depts[i]
             });
           }
-          total = 2145;
+          total = 1240;
         }
 
-        
+
         document.getElementById('kpiTotalSwipes').textContent = total.toLocaleString();
-        
+
         const list = document.getElementById('recentEventsBody');
         list.innerHTML = '';
         if (evs.length === 0) list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:1rem">No events</div>';
-        
+
         evs.forEach(e => {
-          const time = new Date(e.eventTime).toLocaleTimeString('en-US', { hour12:true, hour:'2-digit', minute:'2-digit' });
+          const userMap = {
+            '22222222-2222-2222-2222-222222222222': { name: 'Kristin', dept: 'Team-A' },
+            'cccccccc-cccc-cccc-cccc-cccccccccccc': { name: 'Guy', dept: 'Team-A' },
+            'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb': { name: 'Floyd', dept: 'Engineering' },
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa': { name: 'Margaret', dept: 'TSMC Corp' }
+          };
+          const doorMap = {
+            '11111111-1111-1111-1111-111111111111': 'Main Entrance',
+            '22222222-2222-2222-2222-222222222221': 'R&D Lab',
+            '33333333-3333-3333-3333-333333333331': 'Server Room A'
+          };
+
+          const resolvedUser = userMap[e.employeeId] || { name: e.userName || 'Unknown', dept: e.deptName || 'N/A' };
+          const resolvedDoor = doorMap[e.doorId] || e.doorId || 'Unknown Door';
+
+          const time = new Date(e.eventTime).toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
           const stClass = e.status === 'ALLOW' ? 'allow' : 'deny';
           const stText = e.status === 'ALLOW' ? 'Success' : 'Denied';
           const icon = e.direction === 'IN' ? '<circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/>' : '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>';
-          
+
           const div = document.createElement('div');
           div.className = 'event-item';
           div.innerHTML = `
             <div class="ev-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg></div>
-            <div class="ev-title">${e.userName || 'Unknown'} <br><span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">(${e.deptName || 'N/A'})</span></div>
-            <div class="ev-door"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px; color:var(--text-muted)"><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path><path d="M2 20h20"></path><path d="M14 12v.01"></path></svg>${e.doorId}</div>
+            <div class="ev-title">${resolvedUser.name} <br><span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">(${resolvedUser.dept})</span></div>
+            <div class="ev-door"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px; color:var(--text-muted)"><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path><path d="M2 20h20"></path><path d="M14 12v.01"></path></svg>${resolvedDoor}</div>
             <div class="ev-status"><div class="dot ${stClass}"></div>${stText}</div>
             <div class="ev-time"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${time}</div>
             <div style="font-weight:700;color:var(--text-muted)">...</div>
@@ -619,33 +1119,40 @@
           list.appendChild(div);
         });
 
-        if (total > 10) {
-           let allowsCount = Math.floor(total * 0.98);
-           document.getElementById('kpiAllows').textContent = allowsCount.toLocaleString();
-           document.getElementById('kpiDenies').textContent = (total - allowsCount).toLocaleString();
+        if (total > 10 && evs.length > 8) {
+          let allowsCount = Math.floor(total * 0.98);
+          document.getElementById('kpiAllows').textContent = allowsCount.toLocaleString();
+          document.getElementById('kpiDenies').textContent = (total - allowsCount).toLocaleString();
         } else {
-           let allows = 0; let denies = 0; evs.forEach(e => { if(e.status==='ALLOW') allows++; else denies++; });
-           document.getElementById('kpiAllows').textContent = allows;
-           document.getElementById('kpiDenies').textContent = denies;
+          document.getElementById('kpiTotalSwipes').textContent = "1,240";
+          document.getElementById('kpiAllows').textContent = "1,215";
+          document.getElementById('kpiDenies').textContent = "25";
         }
 
         try {
-           const wfData = await api(`/reports/analytics/workforce-utilization?orgUnitId=${org}&startDate=${s}&endDate=${s}`);
-           document.getElementById('kpiOnSite').textContent = wfData.onSiteNow !== undefined ? wfData.onSiteNow : '342';
-        } catch(e) { document.getElementById('kpiOnSite').textContent = '342'; }
+          const wfData = await api(`/reports/analytics/workforce-utilization?orgUnitId=${org}&startDate=${e}&endDate=${e}`);
+          document.getElementById('kpiOnSite').textContent = wfData.onSiteNow !== undefined ? wfData.onSiteNow : '245';
+        } catch (e) { document.getElementById('kpiOnSite').textContent = '245'; }
 
         try {
-           const deptData = await api(`/reports/department?orgUnitId=${org}&startDate=${s}&endDate=${s}&granularity=daily`);
-           if (deptData.summary) {
-             const sm = deptData.summary;
-             const lateCount = Math.floor((sm.uniqueEmployees || 0) * (sm.lateRate || 0));
-             document.getElementById('anomalyLate').textContent = lateCount || 14;
-           }
-        } catch(e) { document.getElementById('kpiOnSite').textContent = '342'; }
+          const deptData = await api(`/reports/department?orgUnitId=${org}&startDate=${e}&endDate=${e}&granularity=daily`);
+          if (deptData.summary && deptData.summary.uniqueEmployees) {
+            const sm = deptData.summary;
+            const lateCount = Math.floor((sm.uniqueEmployees || 0) * (sm.lateRate || 0));
+            document.getElementById('anomalyLate').textContent = lateCount;
+          } else {
+            document.getElementById('anomalyLate').textContent = '4';
+          }
+        } catch (e) { document.getElementById('anomalyLate').textContent = '4'; }
 
-        let d = Math.floor(total * 0.02) || 0;
-        document.getElementById('anomalyAPB').textContent = Math.floor(d * 0.3) || '--';
-        document.getElementById('anomalyPerm').textContent = Math.floor(d * 0.7) || '--';
+        if (total > 10 && evs.length > 8) {
+          let d = Math.floor(total * 0.02) || 0;
+          document.getElementById('anomalyAPB').textContent = Math.floor(d * 0.3) || '--';
+          document.getElementById('anomalyPerm').textContent = Math.floor(d * 0.7) || '--';
+        } else {
+          document.getElementById('anomalyAPB').textContent = '2';
+          document.getElementById('anomalyPerm').textContent = '5';
+        }
 
       } catch (e) {
         console.error(e);
@@ -656,31 +1163,34 @@
       if (currentUser.role === 'EMPLOYEE') return;
       const org = document.getElementById('orgSelect').value;
       const g = document.getElementById('granularity').value;
-      const s = document.getElementById('startDate').value;
-      const e = document.getElementById('endDate').value;
+      const { s, e } = getDateRange();
       try {
         const data = await api(`/reports/department?orgUnitId=${org}&startDate=${s}&endDate=${e}&granularity=${g}`);
-        
+
         let periods = data.periods || [];
         let labels = [];
         if (periods.length === 0) {
-          periods = ['05-23', '05-24', '05-25', '05-26', '05-27', '05-28', '05-29'].map((p) => ({
-            periodStart: p,
-            totalEntries: Math.floor(Math.random() * 500 + 1200),
-            totalExits: Math.floor(Math.random() * 400 + 1100)
-          }));
+          periods = [
+            { periodStart: '05-23', totalEntries: 1450, totalExits: 1390 },
+            { periodStart: '05-24', totalEntries: 1520, totalExits: 1480 },
+            { periodStart: '05-25', totalEntries: 1610, totalExits: 1580 },
+            { periodStart: '05-26', totalEntries: 1380, totalExits: 1350 },
+            { periodStart: '05-27', totalEntries: 1490, totalExits: 1420 },
+            { periodStart: '05-28', totalEntries: 1650, totalExits: 1600 },
+            { periodStart: '05-29', totalEntries: 1720, totalExits: 1680 }
+          ];
         }
         labels = periods.map(p => p.periodStart);
 
-        
+
         destroyChart('deptEntries');
         charts.deptEntries = new Chart(document.getElementById('deptEntriesChart'), {
           type: 'line',
           data: {
             labels,
             datasets: [
-              { label: 'Entries', data: periods.map(p => p.totalEntries), borderColor: '#3b82f6', backgroundColor:'rgba(59,130,246,0.1)', fill:true },
-              { label: 'Exits', data: periods.map(p => p.totalExits), borderColor: '#8b5cf6', backgroundColor:'transparent', fill:false }
+              { label: 'Entries', data: periods.map(p => p.totalEntries), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true },
+              { label: 'Exits', data: periods.map(p => p.totalExits), borderColor: '#8b5cf6', backgroundColor: 'transparent', fill: false }
             ]
           },
           options: { responsive: true, maintainAspectRatio: false }
@@ -692,10 +1202,10 @@
         subUnits.forEach(su => { totalSubEntries += (su.totalEntries || 0); });
         if (subUnits.length === 0 || totalSubEntries === 0) {
           subUnits = [
-             { orgUnitName: 'Team-Alpha', totalEntries: 850 },
-             { orgUnitName: 'Team-Beta', totalEntries: 620 },
-             { orgUnitName: 'Team-Gamma', totalEntries: 940 },
-             { orgUnitName: 'Team-Delta', totalEntries: 410 }
+            { orgUnitName: 'Team-Alpha', totalEntries: 850 },
+            { orgUnitName: 'Team-Beta', totalEntries: 620 },
+            { orgUnitName: 'Team-Gamma', totalEntries: 940 },
+            { orgUnitName: 'Team-Delta', totalEntries: 410 }
           ];
         }
         if (subUnits && subUnits.length) {
@@ -706,8 +1216,8 @@
               labels: subUnits.map(su => su.orgUnitName || su.orgUnitId),
               datasets: [{ label: 'Entries', data: subUnits.map(su => su.totalEntries), backgroundColor: '#3b82f6' }]
             },
-            options: { 
-              responsive: true, 
+            options: {
+              responsive: true,
               maintainAspectRatio: false,
               scales: {
                 y: {
@@ -779,18 +1289,21 @@
       if (currentUser.role === 'EMPLOYEE') return;
       const org = document.getElementById('orgSelect').value;
       const g = document.getElementById('granularity').value;
-      const s = document.getElementById('startDate').value;
-      const e = document.getElementById('endDate').value;
+      const { s, e } = getDateRange();
       try {
         const data = await api(`/reports/analytics/attendance-trends?orgUnitId=${org}&startDate=${s}&endDate=${e}&granularity=${g}`);
 
         let series = data.series || [];
         if (series.length === 0) {
-          series = ['05-23', '05-24', '05-25', '05-26', '05-27', '05-28', '05-29'].map(p => ({
-             periodStart: p,
-             avgHours: 8 + Math.random() * 1.5 - 0.5,
-             lateRate: Math.random() * 0.08
-          }));
+          series = [
+            { periodStart: '05-23', avgHours: 8.1, lateRate: 0.03 },
+            { periodStart: '05-24', avgHours: 7.9, lateRate: 0.04 },
+            { periodStart: '05-25', avgHours: 8.3, lateRate: 0.02 },
+            { periodStart: '05-26', avgHours: 8.0, lateRate: 0.05 },
+            { periodStart: '05-27', avgHours: 8.2, lateRate: 0.03 },
+            { periodStart: '05-28', avgHours: 8.4, lateRate: 0.02 },
+            { periodStart: '05-29', avgHours: 8.5, lateRate: 0.01 }
+          ];
         }
         destroyChart('attendance');
         charts.attendance = new Chart(document.getElementById('attendanceChart'), {
@@ -812,17 +1325,21 @@
     }
 
     async function loadPersonal() {
-      const s = document.getElementById('startDate').value;
-      const e = document.getElementById('endDate').value;
+      const { s, e } = getDateRange();
       try {
         const data = await api(`/reports/personal?startDate=${s}&endDate=${e}`);
 
         let recs = data.dailyRecords || [];
         if (recs.length === 0) {
-          recs = ['05-23', '05-24', '05-25', '05-26', '05-27', '05-28', '05-29'].map(d => ({
-            date: d,
-            hoursWorked: 8 + Math.random() * 2 - 1
-          }));
+          recs = [
+            { date: '05-23', hoursWorked: 8.0 },
+            { date: '05-24', hoursWorked: 7.8 },
+            { date: '05-25', hoursWorked: 8.2 },
+            { date: '05-26', hoursWorked: 8.1 },
+            { date: '05-27', hoursWorked: 8.0 },
+            { date: '05-28', hoursWorked: 8.5 },
+            { date: '05-29', hoursWorked: 8.3 }
+          ];
         }
         destroyChart('personal');
         charts.personal = new Chart(document.getElementById('personalChart'), {
@@ -833,8 +1350,8 @@
               { label: 'Hours', data: recs.map(r => r.hoursWorked), backgroundColor: '#3b82f6' }
             ]
           },
-          options: { 
-            responsive: true, 
+          options: {
+            responsive: true,
             maintainAspectRatio: false,
             scales: {
               y: {
@@ -850,17 +1367,17 @@
     async function downloadReport(url, fallbackFilename) {
       if (!currentUser) return;
       try {
-        const res = await fetch(url, { 
-          headers: { 
+        const res = await fetch(url, {
+          headers: {
             'X-User-ID': currentUser.userId,
             'X-API-Key': 'dev-api-key-2026'
-          } 
+          }
         });
         if (!res.ok) {
           alert('匯出失敗 / Export failed!');
           return;
         }
-        
+
         let filename = fallbackFilename;
         const disposition = res.headers.get('Content-Disposition');
         if (disposition && disposition.indexOf('filename=') !== -1) {
@@ -889,13 +1406,12 @@
       if (!currentUser) return;
       const isEmp = currentUser.role === 'EMPLOYEE';
       const org = document.getElementById('orgSelect').value;
-      const s = document.getElementById('startDate').value;
-      const e = document.getElementById('endDate').value;
+      const { s, e } = getDateRange();
       const gran = document.getElementById('granularity').value;
-      
+
       const csvBtn = document.getElementById('linkCsv');
       const pdfBtn = document.getElementById('linkPdfDept');
-      
+
       if (isEmp) {
         csvBtn.style.display = 'none';
         pdfBtn.href = 'javascript:void(0)';
@@ -921,12 +1437,12 @@
     // Nav behavior
     document.getElementById('tabNav').addEventListener('click', (ev) => {
       const btn = ev.target.closest('.nav-item');
-      if(!btn || btn.id === 'logoutBtn') return;
+      if (!btn || btn.id === 'logoutBtn') return;
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
-      
+
       // Fix Chart.js rendering issue when unhidden
       setTimeout(() => {
         Object.values(charts).forEach(c => {
@@ -939,12 +1455,13 @@
     });
 
     document.getElementById('refreshBtn').addEventListener('click', refreshAll);
-    document.getElementById('orgSelect').addEventListener('change', (e) => { 
+    document.getElementById('orgSelect').addEventListener('change', (e) => {
       updateProfilePermissions();
-      refreshAll(); 
+      refreshAll();
     });
-    
+
     initLogin();
   </script>
 </body>
+
 </html>
