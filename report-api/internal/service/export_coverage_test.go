@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -344,6 +345,73 @@ func TestRunExportJob_SuccessAndFailurePaths(t *testing.T) {
 	}
 	if j, ok := store.Get(jobID2); !ok || j.Status != export.JobFailed {
 		t.Errorf("expected job2 to be JobFailed, got %v", j)
+	}
+}
+
+func TestRunExportJob_PDFRenderFailure(t *testing.T) {
+	tmp := t.TempDir()
+	store, err := export.NewJobStore(tmp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	orgID := uuid.New().String()
+	mockOrg := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return false, errors.New("subtree check error to trigger failure")
+		},
+	}
+	svcVisual := NewReportService(mockOrg, mockFullReportRepo{}, mockFullInOutRepo{}, nil, store)
+
+	// requesting department PDF triggers ExportDepartmentVisualPDF which fails due to mockOrg IsInSubtreeFn error
+	jobID := store.Create("pdf", "department")
+	req := model.ExportRequest{Type: "department", Format: "pdf", OrgUnitID: orgID}
+	svcVisual.RunExportJob(jobID, req, uuid.New().String(), orgID, auth.RoleTeamManager)
+
+	for i := 0; i < 20; i++ {
+		if j, ok := store.Get(jobID); ok && j.Status != export.JobPending {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if j, ok := store.Get(jobID); !ok || j.Status != export.JobFailed {
+		t.Errorf("expected job to be JobFailed due to PDF render failure, got %v", j)
+	}
+}
+
+func TestRunExportJob_WriteFailure(t *testing.T) {
+	tmp := t.TempDir()
+	store, err := export.NewJobStore(tmp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	orgID := uuid.New().String()
+	mockOrg := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return true, nil
+		},
+	}
+	svcVisual := NewReportService(mockOrg, mockFullReportRepo{}, mockFullInOutRepo{}, nil, store)
+
+	// Make the directory non-writable
+	if err := os.Chmod(tmp, 0000); err != nil {
+		t.Skip("skipping write failure test: failed to chmod tmp dir")
+	}
+	defer os.Chmod(tmp, 0o755) // restore so cleanup doesn't fail
+
+	jobID := store.Create("csv", "events")
+	req := model.ExportRequest{Type: "events", Format: "csv", OrgUnitID: orgID}
+	svcVisual.RunExportJob(jobID, req, uuid.New().String(), orgID, auth.RoleTeamManager)
+
+	for i := 0; i < 20; i++ {
+		if j, ok := store.Get(jobID); ok && j.Status != export.JobPending {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if j, ok := store.Get(jobID); !ok || j.Status != export.JobFailed {
+		t.Errorf("expected job to be JobFailed due to write failure, got %v", j)
 	}
 }
 

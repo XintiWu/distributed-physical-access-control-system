@@ -508,16 +508,110 @@ A local in-memory token bucket rate-limiter prevents brute-force attempts and co
 
 ## GCP & Kubernetes (GKE) Deployment
 
-The microservices are fully cloud-ready and deployed to **Google Cloud Platform (GCP)**.
+The microservices are fully cloud-ready and deployed to **Google Cloud Platform (GCP) / GKE Autopilot**.
 
-### 1. Container Registries
-Build targets are containerized for `linux/amd64` architectures and hosted in Google Artifact Registry:
-* Registry Path: `asia-east1-docker.pkg.dev/access-api-497314/access-api-repo/<service-name>:v1`
+### 1. Build & Push Container Images
 
-### 2. GKE Autopilot & Workload Identity
-* **Namespace:** `access-control`
-* **Secret Management:** Leverages GCP Secret Manager coupled with Kubernetes `ExternalSecret` and Workload Identity Service Accounts (`secret-reader-sa`) to securely synchronize passwords (like ClickHouse Cloud credentials).
-* **Deployment Strategies:** Configured with `Recreate` deployment strategy in GKE Autopilot to coordinate clean updates within constraints.
+Build and push the microservice images to Google Artifact Registry for `linux/amd64` platform:
+
+```bash
+# Configure docker authentication for Artifact Registry
+gcloud auth configure-docker asia-east1-docker.pkg.dev
+
+# Build and push services (replace :v1 with your target tag)
+REGISTRY="asia-east1-docker.pkg.dev/access-api-497314/access-api-repo"
+SERVICES=("access-api" "admin-api" "report-api" "aggregation-worker" "cache-invalidation-worker")
+
+for service in "${SERVICES[@]}"; do
+  docker buildx build --platform linux/amd64 -t "${REGISTRY}/${service}:v1" "./${service}" --push
+done
+```
+
+### 2. GKE Autopilot Cluster Setup & Secrets Configuration
+
+1. **Namespace Setup:**
+   ```bash
+   kubectl apply -f k8s/01-namespace.yaml
+   ```
+
+2. **Secret Management via GCP Secret Manager:**
+   We leverage Kubernetes `ExternalSecret` and Workload Identity Service Accounts (`secret-reader-sa`) to securely synchronize credentials:
+   - Create a Secret named `CLICKHOUSE_PASSWORD` in GCP Secret Manager containing your ClickHouse Cloud password.
+   - Configure the GCP IAM Role binding for the Kubernetes Service Account (`secret-reader-sa`) to allow it access to Secret Manager.
+   - Apply the Secret Store and External Secret:
+     ```bash
+     kubectl apply -f k8s/secrets/secret-store.yaml
+     kubectl apply -f k8s/secrets/external-secret.yaml
+     ```
+     This automatically syncs and creates the native `app-secrets` Secret in the `access-control` namespace.
+
+3. **Application Configuration:**
+   - Update `k8s/02-config.yaml` with your actual ClickHouse Cloud endpoint (`CLICKHOUSE_ADDR`) and Redis internal address (`REDIS_ADDR`).
+   - Apply the Configuration:
+     ```bash
+     kubectl apply -f k8s/02-config.yaml
+     ```
+
+### 3. Deploy Applications & Ingress
+
+1. **Deploy Microservices:**
+   ```bash
+   kubectl apply -f k8s/apps/
+   ```
+   *Note: Deployments are configured with a `Recreate` deployment strategy in GKE Autopilot to coordinate clean updates.*
+
+2. **Setup Ingress & HTTPS (Cert-Manager):**
+   ```bash
+   kubectl apply -f k8s/ingress/cert-manager-issuer.yaml
+   kubectl apply -f k8s/ingress/api-ingress.yaml
+   ```
+
+### 4. Database Cloud Migration & Redis Seeding
+
+Since the cloud environment connects to ClickHouse Cloud and a cloud Redis instance, you can use the Makefile targets with a `.env` file to apply schemas and seed database credentials from your local machine:
+
+1. **Configure your `.env` file:**
+   ```env
+   API_URL="https://api.8.233.250.204.nip.io/access"
+   ADMIN_URL="https://api.8.233.250.204.nip.io/admin"
+   REPORT_URL="https://api.8.233.250.204.nip.io/reports"
+   REDIS_ADDR="10.140.0.3:6379"  # Use port forwarding if seeding from external local
+   CLICKHOUSE_ADDR="xxxxxx.gcp.clickhouse.cloud:8443"
+   CLICKHOUSE_USER="default"
+   CLICKHOUSE_PASSWORD="your-cloud-password"
+   API_KEY="your-prod-api-key"
+   ```
+
+2. **Apply ClickHouse Cloud Schema & Migrations:**
+   ```bash
+   make schema-ch-cloud
+   ```
+
+3. **Seed Cloud Redis Card UIDs:**
+   ```bash
+   # Ensure you have set up a port-forward to your GKE Redis service first (e.g. port 6379)
+   kubectl port-forward svc/redis -n access-control 6379:6379 &
+   make seed
+   ```
+
+### 5. Managed Observability (GMP & Grafana)
+
+The GKE cluster runs Google Cloud Managed Service for Prometheus (GMP) for scraping metrics, and hosts a Grafana instance for visual dashboarding.
+
+1. **Apply Scrapers & Rules:**
+   ```bash
+   kubectl apply -f k8s/monitoring/access-control-scraper.yaml
+   kubectl apply -f k8s/monitoring/prometheus-rules-k8s.yaml
+   ```
+
+2. **Deploy Grafana & Ingress:**
+   ```bash
+   kubectl apply -f k8s/monitoring/grafana-managed-cert.yaml
+   kubectl apply -f k8s/monitoring/grafana-oss.yaml
+   kubectl apply -f k8s/monitoring/grafana-ingress.yaml
+   ```
+
+---
 
 ---
 

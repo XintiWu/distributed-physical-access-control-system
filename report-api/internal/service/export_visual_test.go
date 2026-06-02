@@ -355,3 +355,138 @@ func TestExportDepartmentVisualPDF_MockDataFallback(t *testing.T) {
 	}
 }
 
+func TestExportDepartmentVisualPDF_GetDepartmentReportError(t *testing.T) {
+	org := mockVisualOrgRepo{
+		isInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return false, errors.New("subtree query error")
+		},
+	}
+	svc := NewReportService(org, mockVisualReportRepo{}, mockVisualInOutRepo{}, nil, nil)
+	req := model.ExportRequest{
+		OrgUnitID: uuid.New().String(),
+		StartDate: "2026-05-01",
+		EndDate:   "2026-05-30",
+	}
+	_, err := svc.ExportDepartmentVisualPDF(context.Background(), req, "user-1", "user-org", auth.RoleTeamManager)
+	if err == nil {
+		t.Error("expected error when GetDepartmentReport fails")
+	}
+}
+
+func TestExportDepartmentVisualPDF_GetSubtreeIDsError(t *testing.T) {
+	org := mockVisualOrgRepo{
+		getSubtreeIDsFn: func(ctx context.Context, orgUnitID string) ([]string, error) {
+			return nil, errors.New("subtree ids database error")
+		},
+	}
+	svc := NewReportService(org, mockVisualReportRepo{}, mockVisualInOutRepo{}, nil, nil)
+	req := model.ExportRequest{
+		OrgUnitID: uuid.New().String(),
+		StartDate: "2026-05-01",
+		EndDate:   "2026-05-30",
+	}
+	_, err := svc.ExportDepartmentVisualPDF(context.Background(), req, "user-1", "user-org", auth.RoleTeamManager)
+	if err == nil {
+		t.Error("expected error when GetSubtreeIDs fails")
+	}
+}
+
+func TestExportDepartmentVisualPDF_GetSecurityDenySummaryError(t *testing.T) {
+	inout := mockVisualInOutRepo{
+		getSecurityDenySummaryFn: func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) (model.SecurityDenySummary, error) {
+			return model.SecurityDenySummary{}, errors.New("security query error")
+		},
+	}
+	svc := NewReportService(mockVisualOrgRepo{}, mockVisualReportRepo{}, inout, nil, nil)
+	req := model.ExportRequest{
+		OrgUnitID: uuid.New().String(),
+		StartDate: "2026-05-01",
+		EndDate:   "2026-05-30",
+	}
+	_, err := svc.ExportDepartmentVisualPDF(context.Background(), req, "user-1", "user-org", auth.RoleTeamManager)
+	if err == nil {
+		t.Error("expected error when GetSecurityDenySummary fails")
+	}
+}
+
+func TestExportDepartmentVisualPDF_GetDoorHeatmapError(t *testing.T) {
+	report := mockVisualReportRepo{
+		getDoorHeatmapFn: func(ctx context.Context, orgUnitIDs []string, minutes int) ([]repository.DoorHeatmapRow, error) {
+			return nil, errors.New("door heatmap db error")
+		},
+	}
+	svc := NewReportService(mockVisualOrgRepo{}, report, mockVisualInOutRepo{}, nil, nil)
+	req := model.ExportRequest{
+		OrgUnitID: uuid.New().String(),
+		StartDate: "2026-05-01",
+		EndDate:   "2026-05-30",
+	}
+	_, err := svc.ExportDepartmentVisualPDF(context.Background(), req, "user-1", "user-org", auth.RoleTeamManager)
+	if err == nil {
+		t.Error("expected error when GetDoorHeatmap fails")
+	}
+}
+
+func TestExportDepartmentVisualPDF_GetAttendanceTrendsError(t *testing.T) {
+	report := mockVisualReportRepo{
+		getAttendanceTrendsFn: func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) ([]repository.PeriodAttendanceMetrics, error) {
+			return nil, errors.New("attendance trends db error")
+		},
+	}
+	svc := NewReportService(mockVisualOrgRepo{}, report, mockVisualInOutRepo{}, nil, nil)
+	req := model.ExportRequest{
+		OrgUnitID: uuid.New().String(),
+		StartDate: "2026-05-01",
+		EndDate:   "2026-05-30",
+	}
+	_, err := svc.ExportDepartmentVisualPDF(context.Background(), req, "user-1", "user-org", auth.RoleTeamManager)
+	if err == nil {
+		t.Error("expected error when GetAttendanceTrends fails")
+	}
+}
+
+func TestBuildReportDetailRows_SubtreeIDsError(t *testing.T) {
+	org := mockVisualOrgRepo{
+		getSubtreeIDsFn: func(ctx context.Context, orgUnitID string) ([]string, error) {
+			return nil, errors.New("subtree ids error")
+		},
+	}
+	svc := NewReportService(org, mockVisualReportRepo{}, mockVisualInOutRepo{}, nil, nil)
+	dept := &model.DepartmentReportResponse{
+		OrgUnitID: "unit-1",
+	}
+	_, err := svc.buildReportDetailRows(context.Background(), dept, "2026-05-01", "2026-05-30")
+	if err == nil {
+		t.Error("expected error when GetSubtreeIDs fails in buildReportDetailRows")
+	}
+}
+
+func TestBuildReportDetailRows_GetEmployeeReportRowsError(t *testing.T) {
+	inout := mockVisualInOutRepo{
+		getEmployeeReportRowsFn: func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) ([]model.EmployeeReportRow, error) {
+			return nil, errors.New("employee report rows db error")
+		},
+	}
+	svc := NewReportService(mockVisualOrgRepo{}, mockVisualReportRepo{}, inout, nil, nil)
+	dept := &model.DepartmentReportResponse{
+		OrgUnitID: "unit-1",
+	}
+	_, err := svc.buildReportDetailRows(context.Background(), dept, "2026-05-01", "2026-05-30")
+	if err == nil {
+		t.Error("expected error when GetEmployeeReportRows fails")
+	}
+}
+
+func TestExportDepartmentVisualPDF_ExecutiveRole(t *testing.T) {
+	svc := NewReportService(mockVisualOrgRepo{}, mockVisualReportRepo{}, mockVisualInOutRepo{}, nil, nil)
+	req := model.ExportRequest{
+		OrgUnitID: uuid.New().String(),
+		StartDate: "2026-05-01",
+		EndDate:   "2026-05-30",
+	}
+	_, err := svc.ExportDepartmentVisualPDF(context.Background(), req, "user-1", "user-org", auth.RoleCEO)
+	if err != nil {
+		t.Fatalf("expected success with executive role, got: %v", err)
+	}
+}
+

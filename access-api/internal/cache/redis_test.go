@@ -255,3 +255,56 @@ func TestRedisCache_BatchRead_EmptyCard(t *testing.T) {
 	}
 }
 
+func TestRedisCache_IsDenied_Error(t *testing.T) {
+	c, _ := newTestCache(t)
+	c.client.Close() // Close client to force error
+	_, err := c.IsDenied(context.Background(), "user-1")
+	if err == nil {
+		t.Error("expected error from closed client")
+	}
+}
+
+func TestNewRedisCache_Cluster(t *testing.T) {
+	t.Setenv("REDIS_CLUSTER", "true")
+	c := NewRedisCache("localhost:6379")
+	if c == nil {
+		t.Fatal("expected non-nil cache")
+	}
+}
+
+func TestRedisCache_LookupCard_Error(t *testing.T) {
+	c, _ := newTestCache(t)
+	c.client.Close() // Close client to force error
+	_, err := c.LookupCard(context.Background(), "card-1")
+	if err == nil {
+		t.Error("expected error from closed client")
+	}
+}
+
+func TestRedisCache_GetPassback_Error(t *testing.T) {
+	c, _ := newTestCache(t)
+	c.client.Close() // Close client to force error
+	_, err := c.GetPassback(context.Background(), "user-1")
+	if err == nil {
+		t.Error("expected error from closed client")
+	}
+}
+
+func TestRedisCache_GetDoorStatus_Error(t *testing.T) {
+	c, _ := newTestCache(t)
+	c.client.Close() // Close client to force error
+	_, err := c.GetDoorStatus(context.Background(), "door-1")
+	if err == nil {
+		t.Error("expected error from closed client")
+	}
+}
+
+func TestRedisCache_BatchRead_Error(t *testing.T) {
+	c, _ := newTestCache(t)
+	c.client.Close() // Close client to force error
+	_, err := c.BatchRead(context.Background(), "card-1", "user-1")
+	if err == nil {
+		t.Error("expected error from closed client")
+	}
+}
+
