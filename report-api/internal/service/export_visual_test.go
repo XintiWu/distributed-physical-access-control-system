@@ -182,6 +182,7 @@ func (m mockVisualInOutRepo) GetEmployeeReportRows(ctx context.Context, orgUnitI
 func (m mockVisualInOutRepo) Close() error { return nil }
 
 type mockVisualReportRepo struct {
+	getSummaryFn           func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) (model.DepartmentSummary, error)
 	getDoorHeatmapFn       func(ctx context.Context, orgUnitIDs []string, minutes int) ([]repository.DoorHeatmapRow, error)
 	getAttendanceTrendsFn func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) ([]repository.PeriodAttendanceMetrics, error)
 }
@@ -192,6 +193,9 @@ func (m mockVisualReportRepo) GetAggregated(ctx context.Context, orgUnitIDs []st
 	}, nil
 }
 func (m mockVisualReportRepo) GetSummary(ctx context.Context, orgUnitIDs []string, startDate, endDate string) (model.DepartmentSummary, error) {
+	if m.getSummaryFn != nil {
+		return m.getSummaryFn(ctx, orgUnitIDs, startDate, endDate)
+	}
 	return model.DepartmentSummary{
 		TotalEntries: 100, TotalExits: 100, UniqueEmployees: 10, Headcount: 12, WorkforceUtilization: 0.83, AvgHoursPerDay: 8.1, LateRate: 0.05,
 	}, nil
@@ -311,3 +315,43 @@ func TestBuildReportDetailRows_Subunits(t *testing.T) {
 		t.Errorf("unexpected row structure: %+v", rows[0])
 	}
 }
+
+func TestExportDepartmentVisualPDF_MockDataFallback(t *testing.T) {
+	req := model.ExportRequest{
+		OrgUnitID: "mock-org-1",
+		StartDate: "2026-05-01",
+		EndDate:   "2026-05-30",
+		Granularity: "daily",
+	}
+	seedVal := hashCodeGo(req.EndDate + req.OrgUnitID)
+	targetEntries := 1000 + (seedVal % 500)
+
+	reportRepo := mockVisualReportRepo{
+		getSummaryFn: func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) (model.DepartmentSummary, error) {
+			return model.DepartmentSummary{
+				TotalEntries: targetEntries,
+			}, nil
+		},
+		getDoorHeatmapFn: func(ctx context.Context, orgUnitIDs []string, minutes int) ([]repository.DoorHeatmapRow, error) {
+			return []repository.DoorHeatmapRow{}, nil // Empty to trigger fallback
+		},
+		getAttendanceTrendsFn: func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) ([]repository.PeriodAttendanceMetrics, error) {
+			return []repository.PeriodAttendanceMetrics{}, nil // Empty to trigger fallback
+		},
+	}
+	inoutRepo := mockVisualInOutRepo{
+		getSecurityDenySummaryFn: func(ctx context.Context, orgUnitIDs []string, startDate, endDate string) (model.SecurityDenySummary, error) {
+			return model.SecurityDenySummary{AntiPassbackDenies: 0, PermissionDenied: 0}, nil
+		},
+	}
+
+	svc := NewReportService(mockVisualOrgRepo{}, reportRepo, inoutRepo, nil, nil)
+	data, err := svc.ExportDepartmentVisualPDF(context.Background(), req, "user-1", "user-org", auth.RoleCEO)
+	if err != nil {
+		t.Fatalf("ExportDepartmentVisualPDF failed: %v", err)
+	}
+	if len(data) == 0 {
+		t.Error("expected non-empty visual PDF data with mocked data")
+	}
+}
+

@@ -41,6 +41,9 @@ func (m *MockCacheStore) SetDenied(ctx context.Context, userID string) error {
 }
 
 func (m *MockCacheStore) ClearDenied(ctx context.Context, userID string) error {
+	if ctx == nil {
+		return nil
+	}
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }

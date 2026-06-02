@@ -200,3 +200,58 @@ func TestKeyFormatters(t *testing.T) {
 		t.Errorf("doorStatusKey = %q", doorStatusKey("d1"))
 	}
 }
+
+func TestRedisCache_BatchRead_HitAll(t *testing.T) {
+	c, mr := newTestCache(t)
+	mr.Set("card:card-1", "user-1")
+	mr.Set("perm:denied:user-1", "1")
+	mr.Set("passback:user-1", "IN")
+
+	res, err := c.BatchRead(context.Background(), "card-1", "user-1")
+	if err != nil {
+		t.Fatalf("BatchRead error: %v", err)
+	}
+	if res.MappedUserID != "user-1" {
+		t.Errorf("MappedUserID = %q, want user-1", res.MappedUserID)
+	}
+	if !res.IsDenied {
+		t.Errorf("IsDenied = %v, want true", res.IsDenied)
+	}
+	if res.PassbackState != model.PassbackIN {
+		t.Errorf("PassbackState = %v, want IN", res.PassbackState)
+	}
+}
+
+func TestRedisCache_BatchRead_MissAll(t *testing.T) {
+	c, _ := newTestCache(t)
+	res, err := c.BatchRead(context.Background(), "card-2", "user-2")
+	if err != nil {
+		t.Fatalf("BatchRead error: %v", err)
+	}
+	if res.MappedUserID != "" {
+		t.Errorf("MappedUserID = %q, want empty", res.MappedUserID)
+	}
+	if res.IsDenied {
+		t.Errorf("IsDenied = %v, want false", res.IsDenied)
+	}
+	if res.PassbackState != model.PassbackNone {
+		t.Errorf("PassbackState = %v, want NONE", res.PassbackState)
+	}
+}
+
+func TestRedisCache_BatchRead_EmptyCard(t *testing.T) {
+	c, mr := newTestCache(t)
+	mr.Set("passback:user-3", "OUT")
+
+	res, err := c.BatchRead(context.Background(), "", "user-3")
+	if err != nil {
+		t.Fatalf("BatchRead error: %v", err)
+	}
+	if res.MappedUserID != "" {
+		t.Errorf("MappedUserID = %q, want empty", res.MappedUserID)
+	}
+	if res.PassbackState != model.PassbackOUT {
+		t.Errorf("PassbackState = %v, want OUT", res.PassbackState)
+	}
+}
+

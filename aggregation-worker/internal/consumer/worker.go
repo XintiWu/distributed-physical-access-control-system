@@ -56,40 +56,43 @@ func (w *Worker) Run(ctx context.Context) error {
 			continue
 		}
 		log.Printf("fetched message from partition %d, offset %d: %s", msg.Partition, msg.Offset, string(msg.Value))
+		w.processMessage(ctx, msg)
+	}
+}
 
-		var event model.InOutEvent
-		if err := json.Unmarshal(msg.Value, &event); err != nil {
-			log.Printf("invalid message: %v", err)
-			_ = w.reader.CommitMessages(ctx, msg)
-			continue
-		}
+func (w *Worker) processMessage(ctx context.Context, msg kafka.Message) {
+	var event model.InOutEvent
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
+		log.Printf("invalid message: %v", err)
+		_ = w.reader.CommitMessages(ctx, msg)
+		return
+	}
 
-		// Fetch employee's org_unit_id from ClickHouse to enrich the event
-		orgLookupCtx, orgLookupCancel := context.WithTimeout(ctx, 5*time.Second)
-		orgUnitID, err := w.repo.GetEmployeeOrgUnitID(orgLookupCtx, event.EmployeeID)
-		if err != nil {
-			log.Printf("org lookup failed eventId=%s: %v", event.EventID, err)
-		}
-		orgLookupCancel()
-		if err == nil && orgUnitID == "" {
-			orgUnitID = "a0000000-0000-0000-0000-000000000001" // Fallback to root TSMC Corp for unregistered/simulated users
-		}
-		log.Printf("org lookup for employee %s returned orgUnitID %s", event.EmployeeID, orgUnitID)
+	// Fetch employee's org_unit_id from ClickHouse to enrich the event
+	orgLookupCtx, orgLookupCancel := context.WithTimeout(ctx, 5*time.Second)
+	orgUnitID, err := w.repo.GetEmployeeOrgUnitID(orgLookupCtx, event.EmployeeID)
+	if err != nil {
+		log.Printf("org lookup failed eventId=%s: %v", event.EventID, err)
+	}
+	orgLookupCancel()
+	if err == nil && orgUnitID == "" {
+		orgUnitID = "a0000000-0000-0000-0000-000000000001" // Fallback to root TSMC Corp for unregistered/simulated users
+	}
+	log.Printf("org lookup for employee %s returned orgUnitID %s", event.EmployeeID, orgUnitID)
 
-		insertCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		if err := w.repo.Insert(insertCtx, event, orgUnitID); err != nil {
-			cancel()
-			log.Printf("insert failed eventId=%s: %v", event.EventID, err)
-			continue
-		}
+	insertCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	if err := w.repo.Insert(insertCtx, event, orgUnitID); err != nil {
 		cancel()
-		log.Printf("successfully inserted eventId=%s into ClickHouse", event.EventID)
+		log.Printf("insert failed eventId=%s: %v", event.EventID, err)
+		return
+	}
+	cancel()
+	log.Printf("successfully inserted eventId=%s into ClickHouse", event.EventID)
 
-		if err := w.reader.CommitMessages(ctx, msg); err != nil {
-			log.Printf("commit failed: %v", err)
-		} else {
-			log.Printf("committed message eventId=%s", event.EventID)
-		}
+	if err := w.reader.CommitMessages(ctx, msg); err != nil {
+		log.Printf("commit failed: %v", err)
+	} else {
+		log.Printf("committed message eventId=%s", event.EventID)
 	}
 }
 

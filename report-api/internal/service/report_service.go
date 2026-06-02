@@ -66,46 +66,8 @@ func (s *ReportService) GetPersonalReport(ctx context.Context, userID, startDate
 		return nil, fmt.Errorf("get personal events: %w", err)
 	}
 
-	// Group events by date
-	dayMap := make(map[string]*model.DailyRecord)
-	for _, e := range events {
-		dateStr := e.EventTime.Format("2006-01-02")
-		rec, ok := dayMap[dateStr]
-		if !ok {
-			rec = &model.DailyRecord{Date: dateStr}
-			dayMap[dateStr] = rec
-		}
-		timeStr := e.EventTime.Format("15:04:05")
-		if e.Direction == "IN" {
-			rec.TotalEntries++
-			if rec.FirstIn == "" || timeStr < rec.FirstIn {
-				rec.FirstIn = timeStr
-			}
-		} else if e.Direction == "OUT" {
-			rec.TotalExits++
-			if rec.LastOut == "" || timeStr > rec.LastOut {
-				rec.LastOut = timeStr
-			}
-		}
-	}
-
-	// Calculate hours worked per day
-	for _, rec := range dayMap {
-		if rec.FirstIn != "" && rec.LastOut != "" {
-			firstIn, err := time.Parse("15:04:05", rec.FirstIn)
-			if err != nil {
-				continue
-			}
-			lastOut, err := time.Parse("15:04:05", rec.LastOut)
-			if err != nil {
-				continue
-			}
-			hours := lastOut.Sub(firstIn).Hours()
-			if hours > 0 {
-				rec.HoursWorked = math.Round(hours*100) / 100
-			}
-		}
-	}
+	dayMap := groupEventsByDate(events)
+	calculateHoursWorked(dayMap)
 
 	// Sort by date
 	start, err := time.Parse("2006-01-02", startDate)
@@ -680,4 +642,48 @@ func getMockDatesGo(endStr string) []string {
 		dates[6-i] = d.Format("01-02")
 	}
 	return dates
+}
+
+func groupEventsByDate(events []model.InOutEvent) map[string]*model.DailyRecord {
+	dayMap := make(map[string]*model.DailyRecord)
+	for _, e := range events {
+		dateStr := e.EventTime.Format("2006-01-02")
+		rec, ok := dayMap[dateStr]
+		if !ok {
+			rec = &model.DailyRecord{Date: dateStr}
+			dayMap[dateStr] = rec
+		}
+		timeStr := e.EventTime.Format("15:04:05")
+		if e.Direction == "IN" {
+			rec.TotalEntries++
+			if rec.FirstIn == "" || timeStr < rec.FirstIn {
+				rec.FirstIn = timeStr
+			}
+		} else if e.Direction == "OUT" {
+			rec.TotalExits++
+			if rec.LastOut == "" || timeStr > rec.LastOut {
+				rec.LastOut = timeStr
+			}
+		}
+	}
+	return dayMap
+}
+
+func calculateHoursWorked(dayMap map[string]*model.DailyRecord) {
+	for _, rec := range dayMap {
+		if rec.FirstIn != "" && rec.LastOut != "" {
+			firstIn, err := time.Parse("15:04:05", rec.FirstIn)
+			if err != nil {
+				continue
+			}
+			lastOut, err := time.Parse("15:04:05", rec.LastOut)
+			if err != nil {
+				continue
+			}
+			hours := lastOut.Sub(firstIn).Hours()
+			if hours > 0 {
+				rec.HoursWorked = math.Round(hours*100) / 100
+			}
+		}
+	}
 }

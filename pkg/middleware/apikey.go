@@ -8,6 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func shouldBypassAuth(path string, extraPrefixes []string) bool {
+	if path == "/health" || path == "/metrics" {
+		return true
+	}
+	for _, prefix := range extraPrefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // APIKeyAuth returns a Gin middleware that validates the X-API-Key header.
 // Requests to /health and /metrics are always exempt from authentication.
 // Additional path prefixes may be passed via extraBypassPrefixes (e.g. "/ui").
@@ -15,7 +27,7 @@ import (
 func APIKeyAuth(apiKey string, extraBypassPrefixes ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
-		if path == "/health" || path == "/metrics" {
+		if shouldBypassAuth(path, extraBypassPrefixes) {
 			c.Next()
 			return
 		}
@@ -25,12 +37,6 @@ func APIKeyAuth(apiKey string, extraBypassPrefixes ...string) gin.HandlerFunc {
 				"error": "authentication not configured",
 			})
 			return
-		}
-		for _, prefix := range extraBypassPrefixes {
-			if strings.HasPrefix(path, prefix) {
-				c.Next()
-				return
-			}
 		}
 
 		provided := c.GetHeader("X-API-Key")

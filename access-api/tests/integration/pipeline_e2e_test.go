@@ -33,6 +33,17 @@ func TestPipelineE2E(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 
+	checkHealth(t, ctx, apiURL)
+
+	db := connectClickHouse(t, ctx, chDSN)
+	defer db.Close()
+
+	eventID, decision := sendSwipe(t, ctx, apiURL, userID, doorID, apiKey)
+
+	pollClickHouseAndVerify(t, ctx, db, eventID, userID, decision)
+}
+
+func checkHealth(t *testing.T, ctx context.Context, apiURL string) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL+"/health", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -45,16 +56,21 @@ func TestPipelineE2E(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("health check status %d", resp.StatusCode)
 	}
+}
 
+func connectClickHouse(t *testing.T, ctx context.Context, chDSN string) *sql.DB {
 	db, err := sql.Open("clickhouse", chDSN)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
 	if err := db.PingContext(ctx); err != nil {
+		db.Close()
 		t.Fatalf("clickhouse not reachable: %v", err)
 	}
+	return db
+}
 
+func sendSwipe(t *testing.T, ctx context.Context, apiURL, userID, doorID, apiKey string) (string, string) {
 	body, _ := json.Marshal(map[string]interface{}{
 		"userId":    userID,
 		"doorId":    doorID,
@@ -62,7 +78,7 @@ func TestPipelineE2E(t *testing.T) {
 		"cardUid":   "CARD001",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	})
-	swipeCtx, swipeCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	swipeCtx, swipeCancel := context.WithTimeout(ctx, 10*time.Second)
 	defer swipeCancel()
 	swipeReq, err := http.NewRequestWithContext(swipeCtx, http.MethodPost, apiURL+"/access/swipe", bytes.NewReader(body))
 	if err != nil {
@@ -91,17 +107,21 @@ func TestPipelineE2E(t *testing.T) {
 	if swipe.EventID == "" {
 		t.Fatal("swipe response missing eventId")
 	}
+	return swipe.EventID, swipe.Decision
+}
 
+func pollClickHouseAndVerify(t *testing.T, ctx context.Context, db *sql.DB, eventID, userID, decision string) {
 	deadline := time.Now().Add(30 * time.Second)
 	var (
 		employeeID string
 		direction  string
 		status     string
+		err        error
 	)
 	for time.Now().Before(deadline) {
 		row := db.QueryRowContext(ctx, `
 			SELECT toString(employee_id), toString(direction), toString(status)
-			FROM inout_events WHERE id = ?`, swipe.EventID)
+			FROM inout_events WHERE id = ?`, eventID)
 		err = row.Scan(&employeeID, &direction, &status)
 		if err == nil {
 			break
@@ -113,7 +133,7 @@ func TestPipelineE2E(t *testing.T) {
 	}
 
 	if employeeID == "" {
-		t.Fatalf("event %s not found in ClickHouse inout_events within 30s", swipe.EventID)
+		t.Fatalf("event %s not found in ClickHouse inout_events within 30s", eventID)
 	}
 	if employeeID != userID {
 		t.Fatalf("employee_id: got %s want %s", employeeID, userID)
@@ -121,8 +141,8 @@ func TestPipelineE2E(t *testing.T) {
 	if direction != "IN" {
 		t.Fatalf("direction: got %s want IN", direction)
 	}
-	if status != swipe.Decision {
-		t.Fatalf("status: got %s want %s", status, swipe.Decision)
+	if status != decision {
+		t.Fatalf("status: got %s want %s", status, decision)
 	}
 }
 

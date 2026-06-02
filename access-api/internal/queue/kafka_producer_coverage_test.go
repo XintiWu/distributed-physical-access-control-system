@@ -132,95 +132,93 @@ func TestKafkaProducer_Publish_QueueFull_OutboxAppend(t *testing.T) {
 	_, _ = p.ReplayOutbox(context.Background())
 }
 
-func TestFileOutbox_FailureModes(t *testing.T) {
-	t.Run("invalid path dir creation", func(t *testing.T) {
-		// MkdirAll on a path that is already a file
-		tmpFile := filepath.Join(t.TempDir(), "file")
-		if err := os.WriteFile(tmpFile, []byte("xyz"), 0o600); err != nil {
-			t.Fatal(err)
-		}
-		_, err := NewFileOutbox(tmpFile)
-		if err == nil {
-			t.Error("expected error creating outbox in a path that is a file")
-		}
+func TestFileOutbox_InvalidPathDirCreation(t *testing.T) {
+	// MkdirAll on a path that is already a file
+	tmpFile := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(tmpFile, []byte("xyz"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err := NewFileOutbox(tmpFile)
+	if err == nil {
+		t.Error("expected error creating outbox in a path that is a file")
+	}
+}
+
+func TestFileOutbox_AppendToDirectory(t *testing.T) {
+	tmpDir := t.TempDir()
+	ob := &FileOutbox{path: tmpDir}
+	err := ob.Append(model.InOutEvent{EventID: "evt"})
+	if err == nil {
+		t.Error("expected error appending to a directory path")
+	}
+}
+
+func TestFileOutbox_ReplayDirectory(t *testing.T) {
+	tmpDir := t.TempDir()
+	ob := &FileOutbox{path: tmpDir}
+	_, err := ob.Replay(context.Background(), func(ctx context.Context, e model.InOutEvent) error {
+		return nil
 	})
+	if err == nil {
+		t.Error("expected error replaying from a directory path")
+	}
+}
 
-	t.Run("append to directory instead of file", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		ob := &FileOutbox{path: tmpDir}
-		err := ob.Append(model.InOutEvent{EventID: "evt"})
-		if err == nil {
-			t.Error("expected error appending to a directory path")
-		}
+func TestFileOutbox_ReplayBadJSONLines(t *testing.T) {
+	tmpDir := t.TempDir()
+	ob, _ := NewFileOutbox(tmpDir)
+	if err := os.WriteFile(ob.path, []byte("bad-json-line\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	n, err := ob.Replay(context.Background(), func(ctx context.Context, e model.InOutEvent) error {
+		return nil
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Errorf("expected 0 replayed, got %d", n)
+	}
+}
 
-	t.Run("replay directory instead of file", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		ob := &FileOutbox{path: tmpDir}
-		_, err := ob.Replay(context.Background(), func(ctx context.Context, e model.InOutEvent) error {
-			return nil
-		})
-		if err == nil {
-			t.Error("expected error replaying from a directory path")
+func TestFileOutbox_ReplayStillPendingRewritePath(t *testing.T) {
+	tmpDir := t.TempDir()
+	ob, _ := NewFileOutbox(tmpDir)
+	ev1 := model.InOutEvent{EventID: "evt1"}
+	ev2 := model.InOutEvent{EventID: "evt2"}
+	_ = ob.Append(ev1)
+	_ = ob.Append(ev2)
+
+	n, err := ob.Replay(context.Background(), func(ctx context.Context, e model.InOutEvent) error {
+		if e.EventID == "evt1" {
+			return nil // succeeds
 		}
+		return errors.New("still fails")
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Errorf("expected 1 replayed, got %d", n)
+	}
 
-	t.Run("replay bad json lines", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		ob, _ := NewFileOutbox(tmpDir)
-		if err := os.WriteFile(ob.path, []byte("bad-json-line\n"), 0o600); err != nil {
-			t.Fatal(err)
-		}
-		n, err := ob.Replay(context.Background(), func(ctx context.Context, e model.InOutEvent) error {
-			return nil
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if n != 0 {
-			t.Errorf("expected 0 replayed, got %d", n)
-		}
-	})
+	// Verify only evt2 remains in outbox
+	data, err := os.ReadFile(ob.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytesContains(data, []byte("evt2")) || bytesContains(data, []byte("evt1")) {
+		t.Errorf("unexpected outbox contents: %s", string(data))
+	}
+}
 
-	t.Run("replay still pending rewrite path", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		ob, _ := NewFileOutbox(tmpDir)
-		ev1 := model.InOutEvent{EventID: "evt1"}
-		ev2 := model.InOutEvent{EventID: "evt2"}
-		_ = ob.Append(ev1)
-		_ = ob.Append(ev2)
-
-		n, err := ob.Replay(context.Background(), func(ctx context.Context, e model.InOutEvent) error {
-			if e.EventID == "evt1" {
-				return nil // succeeds
-			}
-			return errors.New("still fails")
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if n != 1 {
-			t.Errorf("expected 1 replayed, got %d", n)
-		}
-
-		// Verify only evt2 remains in outbox
-		data, err := os.ReadFile(ob.path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytesContains(data, []byte("evt2")) || bytesContains(data, []byte("evt1")) {
-			t.Errorf("unexpected outbox contents: %s", string(data))
-		}
-	})
-
-	t.Run("rewrite locked failed path", func(t *testing.T) {
-		ob := &FileOutbox{path: "/invalid/path/that/does/not/exist/outbox.jsonl"}
-		err := ob.rewriteLocked([]model.InOutEvent{{EventID: "evt"}})
-		var pathErr *fs.PathError
-		if !errors.As(err, &pathErr) {
-			t.Errorf("expected PathError, got %v", err)
-		}
-	})
+func TestFileOutbox_RewriteLockedFailedPath(t *testing.T) {
+	ob := &FileOutbox{path: "/invalid/path/that/does/not/exist/outbox.jsonl"}
+	err := ob.rewriteLocked([]model.InOutEvent{{EventID: "evt"}})
+	var pathErr *fs.PathError
+	if !errors.As(err, &pathErr) {
+		t.Errorf("expected PathError, got %v", err)
+	}
 }
 
 func bytesContains(b, sub []byte) bool {

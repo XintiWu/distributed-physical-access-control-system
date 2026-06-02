@@ -1201,11 +1201,26 @@
           data: {
             labels,
             datasets: [
-              { label: 'Entries', data: periods.map(p => p.totalEntries), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true },
-              { label: 'Exits', data: periods.map(p => p.totalExits), borderColor: '#8b5cf6', backgroundColor: 'transparent', fill: false }
+              { label: 'Entries (進入)', data: periods.map(p => p.totalEntries), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true },
+              { label: 'Exits (出去)', data: periods.map(p => p.totalExits), borderColor: '#8b5cf6', backgroundColor: 'transparent', fill: false }
             ]
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { boxWidth: 12, font: { weight: '600' } }
+              }
+            },
+            scales: {
+              y: {
+                title: { display: true, text: '刷卡次數 (次)', font: { weight: '600' } }
+              }
+            }
+          }
         });
 
 
@@ -1221,25 +1236,30 @@
             { orgUnitName: 'Team-Delta', totalEntries: 300 + ((seedVal + 3) % 250) }
           ];
         }
-        if (subUnits && subUnits.length) {
-          destroyChart('subUnitsChart');
           charts.subUnitsChart = new Chart(document.getElementById('subUnitsChart'), {
             type: 'bar',
             data: {
               labels: subUnits.map(su => su.orgUnitName || su.orgUnitId),
-              datasets: [{ label: 'Entries', data: subUnits.map(su => su.totalEntries), backgroundColor: '#3b82f6' }]
+              datasets: [{ label: 'Entries (進入次數)', data: subUnits.map(su => su.totalEntries), backgroundColor: '#3b82f6' }]
             },
             options: {
               responsive: true,
               maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top',
+                  labels: { boxWidth: 12, font: { weight: '600' } }
+                }
+              },
               scales: {
                 y: {
-                  beginAtZero: true
+                  beginAtZero: true,
+                  title: { display: true, text: '進入次數 (次)', font: { weight: '600' } }
                 }
               }
             }
           });
-        }
 
         // Generate mock data and render deptHoursChart
         const seedVal = hashCode(e + org);
@@ -1254,14 +1274,22 @@
           type: 'bar',
           data: {
             labels: deptHours.map(h => h.orgUnitName),
-            datasets: [{ label: 'Average Hours', data: deptHours.map(h => h.avgHours), backgroundColor: '#10b981' }]
+            datasets: [{ label: 'Average Hours (平均工時)', data: deptHours.map(h => h.avgHours), backgroundColor: '#10b981' }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { boxWidth: 12, font: { weight: '600' } }
+              }
+            },
             scales: {
               y: {
-                beginAtZero: true
+                beginAtZero: true,
+                title: { display: true, text: '平均工時 (小時)', font: { weight: '600' } }
               }
             }
           }
@@ -1293,9 +1321,25 @@
           type: 'bar',
           data: {
             labels: doors.map(d => d.doorName || d.doorId),
-            datasets: [{ label: 'Swipes', data: doors.map(d => d.swipeCount), backgroundColor: '#10b981' }]
+            datasets: [{ label: 'Swipes (刷卡次數)', data: doors.map(d => d.swipeCount), backgroundColor: '#10b981' }]
           },
-          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { boxWidth: 12, font: { weight: '600' } }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: '刷卡次數 (次)', font: { weight: '600' } }
+              }
+            }
+          }
         });
 
       } catch (ex) { console.error(ex); }
@@ -1325,13 +1369,47 @@
           data: {
             labels: series.map(p => p.periodStart),
             datasets: [
-              { label: 'Avg Hours', data: series.map(p => p.avgHours), borderColor: '#3b82f6', fill: false, yAxisID: 'y' },
-              { label: 'Late Rate %', data: series.map(p => (p.lateRate || 0) * 100), borderColor: '#f59e0b', fill: false, yAxisID: 'y1' }
+              { label: '平均工時 (Avg Hours)', data: series.map(p => p.avgHours), borderColor: '#3b82f6', fill: false, yAxisID: 'y' },
+              { label: '遲到率 (Late Rate %)', data: series.map(p => (p.lateRate || 0) * 100), borderColor: '#f59e0b', fill: false, yAxisID: 'y1' }
             ]
           },
           options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: { y: { position: 'left' }, y1: { position: 'right' } }
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  boxWidth: 12,
+                  font: {
+                    weight: '600'
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                position: 'left',
+                title: {
+                  display: true,
+                  text: '平均工時 (小時)',
+                  font: {
+                    weight: '600'
+                  }
+                }
+              },
+              y1: {
+                position: 'right',
+                title: {
+                  display: true,
+                  text: '遲到率 (%)',
+                  font: {
+                    weight: '600'
+                  }
+                }
+              }
+            }
           }
         });
 
@@ -1358,15 +1436,23 @@
           data: {
             labels: recs.map(r => r.date),
             datasets: [
-              { label: 'Hours', data: recs.map(r => r.hoursWorked), backgroundColor: '#3b82f6' }
+              { label: 'Hours (工時)', data: recs.map(r => r.hoursWorked), backgroundColor: '#3b82f6' }
             ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { boxWidth: 12, font: { weight: '600' } }
+              }
+            },
             scales: {
               y: {
-                beginAtZero: true
+                beginAtZero: true,
+                title: { display: true, text: '工時 (小時)', font: { weight: '600' } }
               }
             }
           }

@@ -139,130 +139,128 @@ func (mockFullReportRepo) GetPassbackDenyCountsLastMinute(ctx context.Context) (
 }
 func (mockFullReportRepo) Close() error { return nil }
 
-func TestBuildExportDocument_EdgeAndFailures(t *testing.T) {
-	t.Run("personal failing GetPersonalReport", func(t *testing.T) {
-		inout := mockFullInOutRepo{
-			GetPersonalEventsFn: func(ctx context.Context, id, start, end string) ([]model.InOutEvent, error) {
-				return nil, errors.New("personal db error")
-			},
-		}
-		svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, inout, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "personal"}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || !strings.Contains(err.Error(), "personal db error") {
-			t.Errorf("expected personal db error, got %v", err)
-		}
-	})
+func TestBuildExportDocument_PersonalFailingGetPersonalReport(t *testing.T) {
+	inout := mockFullInOutRepo{
+		GetPersonalEventsFn: func(ctx context.Context, id, start, end string) ([]model.InOutEvent, error) {
+			return nil, errors.New("personal db error")
+		},
+	}
+	svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, inout, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "personal"}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || !strings.Contains(err.Error(), "personal db error") {
+		t.Errorf("expected personal db error, got %v", err)
+	}
+}
 
-	t.Run("department access denied role", func(t *testing.T) {
-		svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "department"}, uuid.New().String(), uuid.New().String(), auth.RoleEmployee)
-		if !errors.Is(err, ErrAccessDenied) {
-			t.Errorf("expected ErrAccessDenied, got %v", err)
-		}
-	})
+func TestBuildExportDocument_DepartmentAccessDeniedRole(t *testing.T) {
+	svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "department"}, uuid.New().String(), uuid.New().String(), auth.RoleEmployee)
+	if !errors.Is(err, ErrAccessDenied) {
+		t.Errorf("expected ErrAccessDenied, got %v", err)
+	}
+}
 
-	t.Run("department missing orgUnitId", func(t *testing.T) {
-		svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "department"}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || err.Error() != "orgUnitId is required for department export" {
-			t.Errorf("expected missing orgUnitId error, got %v", err)
-		}
-	})
+func TestBuildExportDocument_DepartmentMissingOrgUnitID(t *testing.T) {
+	svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "department"}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || err.Error() != "orgUnitId is required for department export" {
+		t.Errorf("expected missing orgUnitId error, got %v", err)
+	}
+}
 
-	t.Run("department success", func(t *testing.T) {
-		orgID := uuid.New().String()
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return true, nil
-			},
-		}
-		report := mockFullReportRepo{
-			GetAggregatedFn: func(ctx context.Context, ids []string, start, end string) ([]model.AggregatedRow, error) {
-				return []model.AggregatedRow{{OrgUnitID: "org1", ReportDate: "2026-05-01", TotalEntries: 10, TotalExits: 10}}, nil
-			},
-		}
-		svc := NewReportService(org, report, mockFullInOutRepo{}, nil, nil)
-		doc, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "department", OrgUnitID: orgID, StartDate: "2026-05-01", EndDate: "2026-05-02"}, uuid.New().String(), orgID, auth.RoleTeamManager)
-		if err != nil {
-			t.Fatalf("expected nil error, got %v", err)
-		}
-		if doc.Title == "" {
-			t.Error("expected non-empty department document title")
-		}
-	})
+func TestBuildExportDocument_DepartmentSuccess(t *testing.T) {
+	orgID := uuid.New().String()
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return true, nil
+		},
+	}
+	report := mockFullReportRepo{
+		GetAggregatedFn: func(ctx context.Context, ids []string, start, end string) ([]model.AggregatedRow, error) {
+			return []model.AggregatedRow{{OrgUnitID: "org1", ReportDate: "2026-05-01", TotalEntries: 10, TotalExits: 10}}, nil
+		},
+	}
+	svc := NewReportService(org, report, mockFullInOutRepo{}, nil, nil)
+	doc, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "department", OrgUnitID: orgID, StartDate: "2026-05-01", EndDate: "2026-05-02"}, uuid.New().String(), orgID, auth.RoleTeamManager)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if doc.Title == "" {
+		t.Error("expected non-empty department document title")
+	}
+}
 
-	t.Run("events missing orgUnitId", func(t *testing.T) {
-		svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events"}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || err.Error() != "orgUnitId is required for events export" {
-			t.Errorf("expected missing orgUnitId error, got %v", err)
-		}
-	})
+func TestBuildExportDocument_EventsMissingOrgUnitID(t *testing.T) {
+	svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events"}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || err.Error() != "orgUnitId is required for events export" {
+		t.Errorf("expected missing orgUnitId error, got %v", err)
+	}
+}
 
-	t.Run("events IsInSubtree error", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return false, errors.New("subtree check failed")
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || !strings.Contains(err.Error(), "subtree check failed") {
-			t.Errorf("expected subtree check failed, got %v", err)
-		}
-	})
+func TestBuildExportDocument_EventsIsInSubtreeError(t *testing.T) {
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return false, errors.New("subtree check failed")
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || !strings.Contains(err.Error(), "subtree check failed") {
+		t.Errorf("expected subtree check failed, got %v", err)
+	}
+}
 
-	t.Run("events target not in subtree", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return false, nil
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if !errors.Is(err, ErrAccessDenied) {
-			t.Errorf("expected ErrAccessDenied, got %v", err)
-		}
-	})
+func TestBuildExportDocument_EventsTargetNotInSubtree(t *testing.T) {
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return false, nil
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if !errors.Is(err, ErrAccessDenied) {
+		t.Errorf("expected ErrAccessDenied, got %v", err)
+	}
+}
 
-	t.Run("events org unit name error or nil", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			GetOrgUnitFn: func(ctx context.Context, id string) (*model.OrgUnit, error) {
-				return nil, errors.New("org error")
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || !strings.Contains(err.Error(), "org unit not found") {
-			t.Errorf("expected org unit not found, got %v", err)
-		}
-	})
+func TestBuildExportDocument_EventsOrgUnitNameErrorOrNil(t *testing.T) {
+	org := mockFullOrgRepo{
+		GetOrgUnitFn: func(ctx context.Context, id string) (*model.OrgUnit, error) {
+			return nil, errors.New("org error")
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || !strings.Contains(err.Error(), "org unit not found") {
+		t.Errorf("expected org unit not found, got %v", err)
+	}
+}
 
-	t.Run("events GetSubtreeIDs error", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			GetSubtreeIDsFn: func(ctx context.Context, id string) ([]string, error) {
-				return nil, errors.New("subtree ids error")
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || err.Error() != "subtree ids error" {
-			t.Errorf("expected subtree ids error, got %v", err)
-		}
-	})
+func TestBuildExportDocument_EventsGetSubtreeIDsError(t *testing.T) {
+	org := mockFullOrgRepo{
+		GetSubtreeIDsFn: func(ctx context.Context, id string) ([]string, error) {
+			return nil, errors.New("subtree ids error")
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || err.Error() != "subtree ids error" {
+		t.Errorf("expected subtree ids error, got %v", err)
+	}
+}
 
-	t.Run("events GetEventsForExport error", func(t *testing.T) {
-		inout := mockFullInOutRepo{
-			GetEventsForExportFn: func(ctx context.Context, ids []string, start, end string) ([]model.InOutEvent, error) {
-				return nil, errors.New("events db error")
-			},
-		}
-		svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, inout, nil, nil)
-		_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || err.Error() != "events db error" {
-			t.Errorf("expected events db error, got %v", err)
-		}
-	})
+func TestBuildExportDocument_EventsGetEventsForExportError(t *testing.T) {
+	inout := mockFullInOutRepo{
+		GetEventsForExportFn: func(ctx context.Context, ids []string, start, end string) ([]model.InOutEvent, error) {
+			return nil, errors.New("events db error")
+		},
+	}
+	svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, inout, nil, nil)
+	_, err := svc.BuildExportDocument(context.Background(), model.ExportRequest{Type: "events", OrgUnitID: uuid.New().String()}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || err.Error() != "events db error" {
+		t.Errorf("expected events db error, got %v", err)
+	}
 }
 
 func TestExportSync_VisualPDFPath(t *testing.T) {
@@ -296,174 +294,170 @@ func TestExportSync_VisualPDFPath(t *testing.T) {
 	}
 }
 
-func TestRunExportJob_ServiceCoverage(t *testing.T) {
-	t.Run("nil jobs store returns immediately", func(t *testing.T) {
-		svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		svc.RunExportJob("dummy-job", model.ExportRequest{}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
-	})
-
-	t.Run("non-nil jobs store success and failure paths", func(t *testing.T) {
-		tmp := t.TempDir()
-		store, err := export.NewJobStore(tmp)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		orgID := uuid.New().String()
-		mockOrg := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return true, nil
-			},
-		}
-		mockReport := mockFullReportRepo{
-			GetSummaryFn: func(ctx context.Context, ids []string, start, end string) (model.DepartmentSummary, error) {
-				return model.DepartmentSummary{TotalEntries: 100, TotalExits: 100}, nil
-			},
-		}
-		svcVisual := NewReportService(mockOrg, mockReport, mockFullInOutRepo{}, nil, store)
-		jobID1 := store.Create("pdf", "department")
-		req1 := model.ExportRequest{Type: "department", Format: "pdf", OrgUnitID: orgID, StartDate: "2026-05-01", EndDate: "2026-05-02"}
-		svcVisual.RunExportJob(jobID1, req1, uuid.New().String(), orgID, auth.RoleTeamManager)
-
-		for i := 0; i < 20; i++ {
-			if j, ok := store.Get(jobID1); ok && j.Status != export.JobPending {
-				break
-			}
-			time.Sleep(50 * time.Millisecond)
-		}
-		if j, ok := store.Get(jobID1); !ok || j.Status != export.JobDone {
-			t.Errorf("expected job1 to be JobDone, got %v", j)
-		}
-
-		jobID2 := store.Create("csv", "events")
-		req2 := model.ExportRequest{Type: "events", Format: "csv", OrgUnitID: ""}
-		svcVisual.RunExportJob(jobID2, req2, uuid.New().String(), orgID, auth.RoleTeamManager)
-
-		for i := 0; i < 20; i++ {
-			if j, ok := store.Get(jobID2); ok && j.Status != export.JobPending {
-				break
-			}
-			time.Sleep(50 * time.Millisecond)
-		}
-		if j, ok := store.Get(jobID2); !ok || j.Status != export.JobFailed {
-			t.Errorf("expected job2 to be JobFailed, got %v", j)
-		}
-	})
+func TestRunExportJob_NilJobsStoreReturnsImmediately(t *testing.T) {
+	svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	svc.RunExportJob("dummy-job", model.ExportRequest{}, uuid.New().String(), uuid.New().String(), auth.RoleTeamManager)
 }
 
-func TestExportCSV(t *testing.T) {
-	t.Run("employee access denied", func(t *testing.T) {
-		svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.ExportCSV(context.Background(), model.ExportRequest{}, uuid.New().String(), auth.RoleEmployee)
-		if !errors.Is(err, ErrAccessDenied) {
-			t.Errorf("expected ErrAccessDenied, got %v", err)
-		}
-	})
+func TestRunExportJob_SuccessAndFailurePaths(t *testing.T) {
+	tmp := t.TempDir()
+	store, err := export.NewJobStore(tmp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	t.Run("IsInSubtree error", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return false, errors.New("subtree db error")
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || !strings.Contains(err.Error(), "subtree db error") {
-			t.Errorf("expected subtree db error, got %v", err)
-		}
-	})
+	orgID := uuid.New().String()
+	mockOrg := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return true, nil
+		},
+	}
+	mockReport := mockFullReportRepo{
+		GetSummaryFn: func(ctx context.Context, ids []string, start, end string) (model.DepartmentSummary, error) {
+			return model.DepartmentSummary{TotalEntries: 100, TotalExits: 100}, nil
+		},
+	}
+	svcVisual := NewReportService(mockOrg, mockReport, mockFullInOutRepo{}, nil, store)
+	jobID1 := store.Create("pdf", "department")
+	req1 := model.ExportRequest{Type: "department", Format: "pdf", OrgUnitID: orgID, StartDate: "2026-05-01", EndDate: "2026-05-02"}
+	svcVisual.RunExportJob(jobID1, req1, uuid.New().String(), orgID, auth.RoleTeamManager)
 
-	t.Run("target not in subtree", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return false, nil
-			},
+	for i := 0; i < 20; i++ {
+		if j, ok := store.Get(jobID1); ok && j.Status != export.JobPending {
+			break
 		}
-		svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
-		if !errors.Is(err, ErrAccessDenied) {
-			t.Errorf("expected ErrAccessDenied, got %v", err)
-		}
-	})
+		time.Sleep(50 * time.Millisecond)
+	}
+	if j, ok := store.Get(jobID1); !ok || j.Status != export.JobDone {
+		t.Errorf("expected job1 to be JobDone, got %v", j)
+	}
 
-	t.Run("GetSubtreeIDs error", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return true, nil
-			},
-			GetSubtreeIDsFn: func(ctx context.Context, id string) ([]string, error) {
-				return nil, errors.New("subtree ids db error")
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
-		_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || !strings.Contains(err.Error(), "subtree ids db error") {
-			t.Errorf("expected subtree ids db error, got %v", err)
-		}
-	})
+	jobID2 := store.Create("csv", "events")
+	req2 := model.ExportRequest{Type: "events", Format: "csv", OrgUnitID: ""}
+	svcVisual.RunExportJob(jobID2, req2, uuid.New().String(), orgID, auth.RoleTeamManager)
 
-	t.Run("GetEventsForExport error", func(t *testing.T) {
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return true, nil
-			},
+	for i := 0; i < 20; i++ {
+		if j, ok := store.Get(jobID2); ok && j.Status != export.JobPending {
+			break
 		}
-		inout := mockFullInOutRepo{
-			GetEventsForExportFn: func(ctx context.Context, ids []string, start, end string) ([]model.InOutEvent, error) {
-				return nil, errors.New("export events db error")
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, inout, nil, nil)
-		_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
-		if err == nil || !strings.Contains(err.Error(), "export events db error") {
-			t.Errorf("expected export events db error, got %v", err)
-		}
-	})
+		time.Sleep(50 * time.Millisecond)
+	}
+	if j, ok := store.Get(jobID2); !ok || j.Status != export.JobFailed {
+		t.Errorf("expected job2 to be JobFailed, got %v", j)
+	}
+}
 
-	t.Run("success", func(t *testing.T) {
-		orgID := uuid.New().String()
-		org := mockFullOrgRepo{
-			IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
-				return true, nil
-			},
-		}
-		reasonText := "Passback error"
-		inout := mockFullInOutRepo{
-			GetEventsForExportFn: func(ctx context.Context, ids []string, start, end string) ([]model.InOutEvent, error) {
-				return []model.InOutEvent{
-					{
-						EventID:    "evt1",
-						EmployeeID: "emp1",
-						DoorID:     "door1",
-						Direction:  "IN",
-						EventTime:  time.Now(),
-						Status:     "DENIED",
-						Reason:     &reasonText,
-						SourceIP:   "127.0.0.1",
-					},
-				}, nil
-			},
-		}
-		svc := NewReportService(org, mockFullReportRepo{}, inout, nil, nil)
-		reader, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: orgID, StartDate: "2026-05-01", EndDate: "2026-05-02"}, orgID, auth.RoleTeamManager)
-		if err != nil {
-			t.Fatalf("ExportCSV failed: %v", err)
-		}
-		data, err := io.ReadAll(reader)
-		if err != nil {
-			t.Fatal(err)
-		}
-		content := string(data)
-		if !strings.Contains(content, "EventID,EmployeeID,DoorID,Direction,EventTime,Status,Reason,SourceIP") {
-			t.Error("expected CSV header in output")
-		}
-		if !strings.Contains(content, "evt1,emp1,door1,IN,") {
-			t.Error("expected event row in output")
-		}
-		if !strings.Contains(content, "Passback error") {
-			t.Error("expected reason in output")
-		}
-	})
+func TestExportCSV_EmployeeAccessDenied(t *testing.T) {
+	svc := NewReportService(mockFullOrgRepo{}, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.ExportCSV(context.Background(), model.ExportRequest{}, uuid.New().String(), auth.RoleEmployee)
+	if !errors.Is(err, ErrAccessDenied) {
+		t.Errorf("expected ErrAccessDenied, got %v", err)
+	}
+}
+
+func TestExportCSV_IsInSubtreeError(t *testing.T) {
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return false, errors.New("subtree db error")
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || !strings.Contains(err.Error(), "subtree db error") {
+		t.Errorf("expected subtree db error, got %v", err)
+	}
+}
+
+func TestExportCSV_TargetNotInSubtree(t *testing.T) {
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return false, nil
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
+	if !errors.Is(err, ErrAccessDenied) {
+		t.Errorf("expected ErrAccessDenied, got %v", err)
+	}
+}
+
+func TestExportCSV_GetSubtreeIDsError(t *testing.T) {
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return true, nil
+		},
+		GetSubtreeIDsFn: func(ctx context.Context, id string) ([]string, error) {
+			return nil, errors.New("subtree ids db error")
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, mockFullInOutRepo{}, nil, nil)
+	_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || !strings.Contains(err.Error(), "subtree ids db error") {
+		t.Errorf("expected subtree ids db error, got %v", err)
+	}
+}
+
+func TestExportCSV_GetEventsForExportError(t *testing.T) {
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return true, nil
+		},
+	}
+	inout := mockFullInOutRepo{
+		GetEventsForExportFn: func(ctx context.Context, ids []string, start, end string) ([]model.InOutEvent, error) {
+			return nil, errors.New("export events db error")
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, inout, nil, nil)
+	_, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: uuid.New().String()}, uuid.New().String(), auth.RoleTeamManager)
+	if err == nil || !strings.Contains(err.Error(), "export events db error") {
+		t.Errorf("expected export events db error, got %v", err)
+	}
+}
+
+func TestExportCSV_Success(t *testing.T) {
+	orgID := uuid.New().String()
+	org := mockFullOrgRepo{
+		IsInSubtreeFn: func(ctx context.Context, req, target string) (bool, error) {
+			return true, nil
+		},
+	}
+	reasonText := "Passback error"
+	inout := mockFullInOutRepo{
+		GetEventsForExportFn: func(ctx context.Context, ids []string, start, end string) ([]model.InOutEvent, error) {
+			return []model.InOutEvent{
+				{
+					EventID:    "evt1",
+					EmployeeID: "emp1",
+					DoorID:     "door1",
+					Direction:  "IN",
+					EventTime:  time.Now(),
+					Status:     "DENIED",
+					Reason:     &reasonText,
+					SourceIP:   "127.0.0.1",
+				},
+			}, nil
+		},
+	}
+	svc := NewReportService(org, mockFullReportRepo{}, inout, nil, nil)
+	reader, err := svc.ExportCSV(context.Background(), model.ExportRequest{OrgUnitID: orgID, StartDate: "2026-05-01", EndDate: "2026-05-02"}, orgID, auth.RoleTeamManager)
+	if err != nil {
+		t.Fatalf("ExportCSV failed: %v", err)
+	}
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "EventID,EmployeeID,DoorID,Direction,EventTime,Status,Reason,SourceIP") {
+		t.Error("expected CSV header in output")
+	}
+	if !strings.Contains(content, "evt1,emp1,door1,IN,") {
+		t.Error("expected event row in output")
+	}
+	if !strings.Contains(content, "Passback error") {
+		t.Error("expected reason in output")
+	}
 }
 
 func TestReportService_JobsStoreGetter(t *testing.T) {

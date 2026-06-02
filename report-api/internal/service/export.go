@@ -11,6 +11,8 @@ import (
 	"github.com/tsmc/report-api/internal/model"
 )
 
+const errExportJobFailed = "export job failed due to internal error"
+
 // BuildExportDocument loads data and builds a layout document for the given export type.
 func (s *ReportService) BuildExportDocument(ctx context.Context, req model.ExportRequest, userID, requesterOrgUnitID string, role auth.ReportRole) (export.Document, error) {
 	reportType := req.Type
@@ -127,20 +129,20 @@ func (s *ReportService) RunExportJob(jobID string, req model.ExportRequest, user
 			doc, derr := s.BuildExportDocument(ctx, req, userID, requesterOrgUnitID, role)
 			if derr != nil {
 				slog.Error("export document build failed", "jobId", jobID, "error", derr)
-				s.jobs.MarkFailed(jobID, "export job failed due to internal error")
+				s.jobs.MarkFailed(jobID, errExportJobFailed)
 				return
 			}
 			data, ext, err = RenderExport(doc, req.Format)
 		}
 		if err != nil {
 			slog.Error("export render failed", "jobId", jobID, "error", err)
-			s.jobs.MarkFailed(jobID, "export job failed due to internal error")
+			s.jobs.MarkFailed(jobID, errExportJobFailed)
 			return
 		}
 		path := s.jobs.FilePath(jobID, ext)
 		if err := os.WriteFile(path, data, 0o600); err != nil {
 			slog.Error("export write file failed", "jobId", jobID, "error", err)
-			s.jobs.MarkFailed(jobID, "export job failed due to internal error")
+			s.jobs.MarkFailed(jobID, errExportJobFailed)
 			return
 		}
 		s.jobs.MarkDone(jobID)

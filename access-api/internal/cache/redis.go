@@ -112,7 +112,9 @@ func (c *RedisCache) BatchRead(ctx context.Context, cardUID, userID string) (Bat
 		default:
 			result.PassbackState = model.PassbackNone
 		}
-	} // redis.Nil → PassbackNone (zero value), which is correct
+	} else {
+		result.PassbackState = model.PassbackNone
+	}
 
 	return result, nil
 }

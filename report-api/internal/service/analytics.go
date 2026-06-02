@@ -9,6 +9,8 @@ import (
 	"github.com/tsmc/report-api/internal/repository"
 )
 
+const errOrgUnitNotInSubtree = "orgUnitId %s is not in your subtree"
+
 // GetDoorHeatmap returns real-time door swipe ranking scoped to an org subtree.
 func (s *ReportService) GetDoorHeatmap(ctx context.Context, orgUnitID string, minutes int, requesterOrgUnitID string, role auth.ReportRole) (*model.DoorHeatmapResponse, error) {
 	if !role.CanViewDepartmentReports() {
@@ -22,7 +24,7 @@ func (s *ReportService) GetDoorHeatmap(ctx context.Context, orgUnitID string, mi
 		return nil, err
 	}
 	if !inSubtree {
-		return nil, NewAccessDeniedError(fmt.Sprintf("orgUnitId %s is not in your subtree", orgUnitID))
+		return nil, NewAccessDeniedError(fmt.Sprintf(errOrgUnitNotInSubtree, orgUnitID))
 	}
 	if minutes < 1 {
 		minutes = 60
@@ -57,7 +59,7 @@ func (s *ReportService) GetAttendanceTrends(ctx context.Context, req model.Atten
 		return nil, err
 	}
 	if !inSubtree {
-		return nil, NewAccessDeniedError(fmt.Sprintf("orgUnitId %s is not in your subtree", req.OrgUnitID))
+		return nil, NewAccessDeniedError(fmt.Sprintf(errOrgUnitNotInSubtree, req.OrgUnitID))
 	}
 	granularity := req.Granularity
 	if granularity == "" {
@@ -111,7 +113,7 @@ func (s *ReportService) GetWorkforceUtilization(ctx context.Context, req model.W
 		return nil, err
 	}
 	if !inSubtree {
-		return nil, NewAccessDeniedError(fmt.Sprintf("orgUnitId %s is not in your subtree", req.OrgUnitID))
+		return nil, NewAccessDeniedError(fmt.Sprintf(errOrgUnitNotInSubtree, req.OrgUnitID))
 	}
 	orgUnit, err := s.orgRepo.GetOrgUnit(ctx, req.OrgUnitID)
 	if err != nil || orgUnit == nil {
