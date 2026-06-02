@@ -398,7 +398,11 @@ func TestRunExportJob_WriteFailure(t *testing.T) {
 	if err := os.Chmod(tmp, 0000); err != nil {
 		t.Skip("skipping write failure test: failed to chmod tmp dir")
 	}
-	defer os.Chmod(tmp, 0o755) // restore so cleanup doesn't fail
+	defer func() {
+		if err := os.Chmod(tmp, 0o755); err != nil {
+			t.Logf("failed to restore permissions for %s: %v", tmp, err)
+		}
+	}() // restore so cleanup doesn't fail
 
 	jobID := store.Create("csv", "events")
 	req := model.ExportRequest{Type: "events", Format: "csv", OrgUnitID: orgID}
