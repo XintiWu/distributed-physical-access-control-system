@@ -253,13 +253,21 @@ func (s *ReportService) GetDepartmentReport(ctx context.Context, req model.Depar
 			}
 		}
 
-		if len(resp.SubUnits) > 0 {
-			for idx, su := range resp.SubUnits {
-				suSeed := hashCodeGo(req.EndDate + su.OrgUnitID)
-				resp.SubUnits[idx].TotalEntries = 400 + (suSeed % 400)
-				resp.SubUnits[idx].TotalExits = 380 + (suSeed % 380)
+		if req.OrgUnitID == "a0000000-0000-0000-0000-000000000001" { // TSMC Corp (All)
+			resp.SubUnits = []model.SubUnitSummary{
+				{OrgUnitID: "a0000000-0000-0000-0000-000000000002", OrgUnitName: "Engineering", TotalEntries: 600 + (seedVal % 400), TotalExits: 580 + (seedVal % 400)},
+				{OrgUnitID: "hr", OrgUnitName: "HR", TotalEntries: 300 + ((seedVal + 1) % 200), TotalExits: 290 + ((seedVal + 1) % 200)},
+				{OrgUnitID: "finance", OrgUnitName: "Finance", TotalEntries: 400 + ((seedVal + 2) % 300), TotalExits: 380 + ((seedVal + 2) % 300)},
+				{OrgUnitID: "sales", OrgUnitName: "Sales", TotalEntries: 500 + ((seedVal + 3) % 250), TotalExits: 480 + ((seedVal + 3) % 250)},
 			}
-		} else {
+		} else if req.OrgUnitID == "a0000000-0000-0000-0000-000000000002" { // Engineering
+			resp.SubUnits = []model.SubUnitSummary{
+				{OrgUnitID: "a0000000-0000-0000-0000-000000000003", OrgUnitName: "Team-A", TotalEntries: 500 + (seedVal % 300), TotalExits: 480 + (seedVal % 300)},
+				{OrgUnitID: "beta", OrgUnitName: "Team-Beta", TotalEntries: 400 + ((seedVal + 1) % 250), TotalExits: 380 + ((seedVal + 1) % 250)},
+				{OrgUnitID: "gamma", OrgUnitName: "Team-Gamma", TotalEntries: 600 + ((seedVal + 2) % 350), TotalExits: 580 + ((seedVal + 2) % 350)},
+				{OrgUnitID: "delta", OrgUnitName: "Team-Delta", TotalEntries: 300 + ((seedVal + 3) % 200), TotalExits: 290 + ((seedVal + 3) % 200)},
+			}
+		} else { // Team-A or others
 			resp.SubUnits = []model.SubUnitSummary{
 				{OrgUnitID: "alpha", OrgUnitName: "Team-Alpha", TotalEntries: 600 + (seedVal % 400), TotalExits: 580 + (seedVal % 400)},
 				{OrgUnitID: "beta", OrgUnitName: "Team-Beta", TotalEntries: 400 + ((seedVal + 1) % 350), TotalExits: 380 + ((seedVal + 1) % 350)},

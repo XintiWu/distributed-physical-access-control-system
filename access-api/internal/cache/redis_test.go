@@ -203,9 +203,15 @@ func TestKeyFormatters(t *testing.T) {
 
 func TestRedisCache_BatchRead_HitAll(t *testing.T) {
 	c, mr := newTestCache(t)
-	mr.Set("card:card-1", "user-1")
-	mr.Set("perm:denied:user-1", "1")
-	mr.Set("passback:user-1", "IN")
+	if err := mr.Set("card:card-1", "user-1"); err != nil {
+		t.Fatalf("mr.Set failed: %v", err)
+	}
+	if err := mr.Set("perm:denied:user-1", "1"); err != nil {
+		t.Fatalf("mr.Set failed: %v", err)
+	}
+	if err := mr.Set("passback:user-1", "IN"); err != nil {
+		t.Fatalf("mr.Set failed: %v", err)
+	}
 
 	res, err := c.BatchRead(context.Background(), "card-1", "user-1")
 	if err != nil {
@@ -241,7 +247,9 @@ func TestRedisCache_BatchRead_MissAll(t *testing.T) {
 
 func TestRedisCache_BatchRead_EmptyCard(t *testing.T) {
 	c, mr := newTestCache(t)
-	mr.Set("passback:user-3", "OUT")
+	if err := mr.Set("passback:user-3", "OUT"); err != nil {
+		t.Fatalf("mr.Set failed: %v", err)
+	}
 
 	res, err := c.BatchRead(context.Background(), "", "user-3")
 	if err != nil {
